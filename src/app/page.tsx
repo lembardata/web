@@ -15,11 +15,9 @@ import { Input } from "@/components/ui/input";
 import {
   ArrowRight,
   Brain,
-  FileSpreadsheet,
   Zap,
   BarChart3,
   Shield,
-  Clock,
   Users,
   Star,
   Check,
@@ -28,13 +26,10 @@ import {
   Sparkles,
   Globe,
   Award,
-  ChevronRight,
   Play,
-  Download,
   MessageSquare,
-  Lightbulb,
-  Target,
   Rocket,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -578,7 +573,7 @@ export default function LandingPage() {
             <Button
               size="lg"
               variant="outline"
-              className="w-full sm:w-auto border-white text-white hover:bg-white hover:text-blue-600"
+              className="w-full sm:w-auto border-white text-white hover:bg-white hover:text-blue-600 bg-transparent "
             >
               <MessageSquare className="mr-2 h-5 w-5" />
               Hubungi Sales

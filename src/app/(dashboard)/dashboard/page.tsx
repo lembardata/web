@@ -1,6 +1,6 @@
 "use client";
 
-import { Metadata } from "next";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,9 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Bot,
   FileSpreadsheet,
@@ -20,9 +20,17 @@ import {
   ArrowRight,
   Zap,
   Clock,
+  Brain,
+  Upload,
+  BarChart3,
+  Database,
+  CheckCircle,
+  AlertCircle,
+  XCircle,
 } from "lucide-react";
+
 import Link from "next/link";
-import { useAuth, useAIStats, useSpreadsheets } from "@/hooks/api";
+import { useAuth } from "@/hooks/use-auth";
 
 // Mock data - replace with real data from API
 const mockStats = {
@@ -31,6 +39,65 @@ const mockStats = {
   monthlyUsage: 78,
   planLimit: 100,
   successRate: 94.2,
+  planUsage: {
+    queries: { used: 78, limit: 100, percentage: 78 },
+    storage: { used: 2.4, limit: 10, percentage: 24 },
+    spreadsheets: { used: 23, limit: 50, percentage: 46 },
+  },
+};
+
+const mockRecentActivities = [
+  {
+    id: 1,
+    title: "Formula optimization untuk Sales Report",
+    description: "Mengoptimalkan formula VLOOKUP dan SUMIF",
+    timestamp: "2 menit yang lalu",
+    status: "completed",
+    icon: Bot,
+  },
+  {
+    id: 2,
+    title: "Upload Budget 2024 Spreadsheet",
+    description: "Berhasil mengupload dan memproses data",
+    timestamp: "15 menit yang lalu",
+    status: "completed",
+    icon: FileSpreadsheet,
+  },
+  {
+    id: 3,
+    title: "Analisis Customer Behavior",
+    description: "Query AI untuk analisis pola pembelian",
+    timestamp: "1 jam yang lalu",
+    status: "processing",
+    icon: TrendingUp,
+  },
+];
+
+// Helper functions
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case "completed":
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    case "processing":
+      return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+    case "failed":
+      return <XCircle className="h-4 w-4 text-red-500" />;
+    default:
+      return null;
+  }
+};
+
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case "completed":
+      return <Badge className="bg-green-100 text-green-800">Selesai</Badge>;
+    case "processing":
+      return <Badge className="bg-yellow-100 text-yellow-800">Proses</Badge>;
+    case "failed":
+      return <Badge className="bg-red-100 text-red-800">Gagal</Badge>;
+    default:
+      return <Badge variant="secondary">Unknown</Badge>;
+  }
 };
 
 const recentActivities = [
@@ -66,12 +133,7 @@ const recentActivities = [
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { data: aiStats } = useAIStats();
-  const { data: spreadsheets } = useSpreadsheets();
-
-  // Use real data if available, otherwise use mock data
-  const stats = aiStats || mockStats;
-  const userSpreadsheets = spreadsheets || [];
+  const [selectedTimeRange, setSelectedTimeRange] = useState("30d");
 
   return (
     <div className="space-y-8">
@@ -102,7 +164,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -111,13 +173,12 @@ export default function DashboardPage() {
             <Bot className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalQueries}</div>
+            <div className="text-2xl font-bold">{mockStats.totalQueries}</div>
             <p className="text-xs text-muted-foreground">
               +12% dari bulan lalu
             </p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Spreadsheets</CardTitle>
@@ -125,86 +186,87 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {userSpreadsheets.length || stats.totalSpreadsheets}
+              {mockStats.totalSpreadsheets}
             </div>
             <p className="text-xs text-muted-foreground">+3 spreadsheet baru</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.successRate}%</div>
+            <div className="text-2xl font-bold">{mockStats.successRate}%</div>
             <p className="text-xs text-muted-foreground">
               +2.1% dari minggu lalu
             </p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Plan Usage</CardTitle>
-            <Zap className="h-4 w-4 text-muted-foreground" />
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats.monthlyUsage}/{stats.planLimit}
+              {mockStats.monthlyUsage}/{mockStats.planLimit}
             </div>
             <Progress
-              value={(stats.monthlyUsage / stats.planLimit) * 100}
+              value={(mockStats.monthlyUsage / mockStats.planLimit) * 100}
               className="mt-2"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              {stats.planLimit - stats.monthlyUsage} queries tersisa
+              {mockStats.planLimit - mockStats.monthlyUsage} queries tersisa
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid gap-6 md:grid-cols-2">
         {/* Recent Activities */}
-        <Card className="lg:col-span-2">
+        <Card>
           <CardHeader>
             <CardTitle>Aktivitas Terbaru</CardTitle>
             <CardDescription>
-              Riwayat AI queries dan spreadsheet yang baru saja Anda buat
+              Pantau aktivitas AI dan spreadsheet terbaru Anda
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-center space-x-4">
-                  <div className="flex-shrink-0">
-                    {activity.type === "ai_query" ? (
-                      <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Bot className="h-4 w-4 text-blue-600" />
-                      </div>
-                    ) : (
-                      <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <FileSpreadsheet className="h-4 w-4 text-green-600" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {activity.title}
-                    </p>
-                    <div className="flex items-center space-x-2">
-                      <Clock className="h-3 w-3 text-gray-400" />
-                      <p className="text-xs text-gray-500">{activity.time}</p>
+              {mockRecentActivities.map((activity) => {
+                const IconComponent = activity.icon;
+                return (
+                  <div
+                    key={activity.id}
+                    className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex-shrink-0">
+                      <IconComponent className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">
+                        {activity.title}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {activity.description}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {activity.timestamp}
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0 flex items-center space-x-2">
+                      {getStatusIcon(activity.status)}
+                      {getStatusBadge(activity.status)}
                     </div>
                   </div>
-                  <Badge variant="secondary">Selesai</Badge>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="mt-6">
               <Button variant="outline" className="w-full" asChild>
-                <Link href="/ai-queries">
+                <Link href="/activities">
                   Lihat Semua Aktivitas
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -216,291 +278,136 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle>Aksi Cepat</CardTitle>
             <CardDescription>
-              Aksi cepat untuk meningkatkan produktivitas Anda
+              Akses fitur utama dengan cepat
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Button className="w-full justify-start" asChild>
-              <Link href="/ai-queries">
-                <Bot className="mr-2 h-4 w-4" />
-                Buat AI Query
-              </Link>
-            </Button>
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/sheets">
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Upload Spreadsheet
-              </Link>
-            </Button>
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/docs">
-                <Users className="mr-2 h-4 w-4" />
-                Lihat Dokumentasi
-              </Link>
-            </Button>
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/billing">
-                <TrendingUp className="mr-2 h-4 w-4" />
-                Upgrade Plan
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Usage Analytics */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Analisis Penggunaan Bulanan</CardTitle>
-          <CardDescription>
-            Grafik penggunaan AI queries dalam 30 hari terakhir
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64 flex items-center justify-center text-gray-500">
-            <div className="text-center">
-              <TrendingUp className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-              <p>Grafik analisis akan ditampilkan di sini</p>
-              <p className="text-sm text-gray-400 mt-1">
-                Integrasi dengan library chart akan dilakukan selanjutnya
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-             <div>
-                <CardTitle>Aktivitas Terbaru</CardTitle>
-                <CardDescription>
-                  Riwayat aktivitas AI queries dan spreadsheet Anda
-                </CardDescription>
-              </div>
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/dashboard/activity">Lihat Semua</Link>
-              </Button>
-            </div>
-          </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {mockRecentActivities.map((activity) => {
-                const Icon = activity.icon;
-                return (
-                  <div
-                    key={activity.id}
-                    className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex-shrink-0">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <Icon className="h-5 w-5 text-blue-600" />
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {activity.title}
-                        </p>
-                        {getStatusIcon(activity.status)}
-                      </div>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {activity.description}
-                      </p>
-                      <div className="flex items-center justify-between mt-2">
-                        <p className="text-xs text-gray-500">
-                          {activity.timestamp}
-                        </p>
-                        {getStatusBadge(activity.status)}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="grid grid-cols-2 gap-4">
+              <Link href="/ai-query/new">
+                <Button className="h-20 w-full flex flex-col items-center justify-center space-y-2">
+                  <Brain className="h-6 w-6" />
+                  <span>Buat AI Query Baru</span>
+                </Button>
+              </Link>
+              <Link href="/spreadsheets/upload">
+                <Button
+                  variant="outline"
+                  className="h-20 w-full flex flex-col items-center justify-center space-y-2"
+                >
+                  <Upload className="h-6 w-6" />
+                  <span>Upload Spreadsheet</span>
+                </Button>
+              </Link>
+              <Link href="/analytics">
+                <Button
+                  variant="outline"
+                  className="h-20 w-full flex flex-col items-center justify-center space-y-2"
+                >
+                  <BarChart3 className="h-6 w-6" />
+                  <span>Lihat Analytics</span>
+                </Button>
+              </Link>
+              <Link href="/api-keys">
+                <Button
+                  variant="outline"
+                  className="h-20 w-full flex flex-col items-center justify-center space-y-2"
+                >
+                  <Database className="h-6 w-6" />
+                  <span>Kelola API Keys</span>
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Bottom Grid */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Plan Usage */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Penggunaan Plan</CardTitle>
+            <CardDescription>
+              Monitor penggunaan fitur dalam plan Anda
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span>AI Queries</span>
+                <span>{mockStats.planUsage.queries.used}/{mockStats.planUsage.queries.limit}</span>
+              </div>
+              <Progress value={mockStats.planUsage.queries.percentage} />
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span>Storage</span>
+                <span>{mockStats.planUsage.storage.used} GB / {mockStats.planUsage.storage.limit} GB</span>
+              </div>
+              <Progress value={mockStats.planUsage.storage.percentage} />
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span>Spreadsheets</span>
+                <span>{mockStats.planUsage.spreadsheets.used}/{mockStats.planUsage.spreadsheets.limit}</span>
+              </div>
+              <Progress value={mockStats.planUsage.spreadsheets.percentage} />
+            </div>
+            <div className="pt-4 border-t">
+              <p className="text-sm text-gray-600 mb-3">
+                Anda menggunakan plan <strong>Free</strong>
+              </p>
+              <Button className="w-full" asChild>
+                <Link href="/dashboard/billing">
+                  <Zap className="mr-2 h-4 w-4" />
+                  Upgrade ke Pro
+                </Link>
+              </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Quick Actions & Plan Info */}
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Akses cepat ke fitur utama</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button className="w-full justify-start" asChild>
-                <Link href="/dashboard/ai-queries">
-                  <Brain className="h-4 w-4 mr-2" />
-                  Buat AI Query Baru
-                </Link>
-              </Button>
-
+        {/* Monthly Usage Analytics */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Analitik Penggunaan Bulanan</CardTitle>
+            <CardDescription>
+              Pantau tren penggunaan AI dan spreadsheet Anda
+            </CardDescription>
+            <div className="flex items-center space-x-2 mt-4">
               <Button
-                variant="outline"
-                className="w-full justify-start"
-                asChild
-              >
-                <Link href="/dashboard/sheets">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Spreadsheet
-                </Link>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                asChild
-              >
-                <Link href="/dashboard/analytics">
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Lihat Analytics
-                </Link>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                asChild
-              >
-                <Link href="/dashboard/api-keys">
-                  <Database className="h-4 w-4 mr-2" />
-                  Kelola API Keys
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Plan Usage Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Plan Usage</span>
-                <Badge
-                  className={`
-                    ${userPlan === "free" ? "bg-gray-100 text-gray-800" : ""}
-                    ${userPlan === "pro" ? "bg-yellow-100 text-yellow-800" : ""}
-                    ${userPlan === "enterprise" ? "bg-purple-100 text-purple-800" : ""}
-                  `}
-                >
-                  {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* AI Queries Usage */}
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">AI Queries</span>
-                  <span className="font-medium">
-                    {stats.planUsage.queries.used}/
-                    {stats.planUsage.queries.limit}
-                  </span>
-                </div>
-                <Progress
-                  value={stats.planUsage.queries.percentage}
-                  className="h-2"
-                />
-              </div>
-
-              {/* Storage Usage */}
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">Storage</span>
-                  <span className="font-medium">
-                    {stats.planUsage.storage.used}GB/
-                    {stats.planUsage.storage.limit}GB
-                  </span>
-                </div>
-                <Progress
-                  value={stats.planUsage.storage.percentage}
-                  className="h-2"
-                />
-              </div>
-
-              {/* Spreadsheets Usage */}
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">Spreadsheets</span>
-                  <span className="font-medium">
-                    {stats.planUsage.spreadsheets.used}/
-                    {stats.planUsage.spreadsheets.limit}
-                  </span>
-                </div>
-                <Progress
-                  value={stats.planUsage.spreadsheets.percentage}
-                  className="h-2"
-                />
-              </div>
-
-              {userPlan === "free" && (
-                <div className="pt-4 border-t">
-                  <Button size="sm" className="w-full" asChild>
-                    <Link href="/dashboard/billing">
-                      <Zap className="h-4 w-4 mr-2" />
-                      Upgrade ke Pro
-                    </Link>
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Monthly Analytics Placeholder */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Monthly Usage Analytics</CardTitle>
-              <CardDescription>
-                Tren penggunaan AI queries dan spreadsheet dalam 30 hari
-                terakhir
-              </CardDescription>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant={timeRange === "7d" ? "default" : "outline"}
+                variant={selectedTimeRange === "7d" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setTimeRange("7d")}
+                onClick={() => setSelectedTimeRange("7d")}
               >
                 7 Hari
               </Button>
               <Button
-                variant={timeRange === "30d" ? "default" : "outline"}
+                variant={selectedTimeRange === "30d" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setTimeRange("30d")}
+                onClick={() => setSelectedTimeRange("30d")}
               >
                 30 Hari
               </Button>
               <Button
-                variant={timeRange === "90d" ? "default" : "outline"}
+                variant={selectedTimeRange === "90d" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setTimeRange("90d")}
+                onClick={() => setSelectedTimeRange("90d")}
               >
                 90 Hari
               </Button>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-            <div className="text-center">
-              <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 font-medium">Chart Analytics</p>
-              <p className="text-sm text-gray-500 mt-1">
-                Grafik penggunaan akan ditampilkan di sini
-              </p>
-              <Button variant="outline" size="sm" className="mt-3" asChild>
-                <Link href="/dashboard/analytics">Lihat Detail Analytics</Link>
-              </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+              Chart akan ditampilkan di sini
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
+      

@@ -4,15 +4,10 @@ import { useState, useCallback } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -34,36 +29,24 @@ import {
   FileSpreadsheet,
   Upload,
   Search,
-  Filter,
-  MoreHorizontal,
   Download,
   Eye,
-  Edit,
   Trash2,
   Share,
-  Copy,
   Star,
-  Clock,
   FileText,
-  BarChart3,
-  Database,
   Zap,
-  Plus,
   RefreshCw,
   AlertCircle,
   CheckCircle,
-  X,
-  FolderOpen,
   Calendar,
   HardDrive,
   Users,
-  TrendingUp,
-  Activity,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
-import { useSpreadsheets } from "@/hooks/use-spreadsheets";
 import { useDropzone } from "react-dropzone";
+import { useSpreadsheets } from "@/hooks/api/use-sheets";
 
 // Mock spreadsheets data
 const mockSpreadsheets = [

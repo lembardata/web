@@ -1,682 +1,631 @@
-'use client';
+"use client"
 
-import { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Separator } from "@/components/ui/separator"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import {
   CreditCard,
+  Download,
+  Calendar,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Zap,
   Crown,
   Star,
-  Zap,
-  Calendar,
-  Download,
-  Receipt,
-  AlertTriangle,
-  Check,
-  X,
-  ArrowRight,
-  Sparkles,
-  Shield,
-  Clock,
-  Users,
-  BarChart3,
+  ArrowUpRight,
   FileText,
+  Receipt,
+  Wallet,
+  Target,
+  BarChart3,
+  Users,
+  Database,
+  Shield,
   Headphones,
+  Sparkles,
+  Gift,
   RefreshCw
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { useAuth } from '@/hooks/use-auth';
+} from "lucide-react"
+import { toast } from "sonner"
+import { useAuth } from "@/hooks/use-auth"
 
-// Types
-interface Subscription {
-  id: string;
-  plan: 'free' | 'pro' | 'enterprise';
-  status: 'active' | 'canceled' | 'past_due' | 'trialing';
-  currentPeriodStart: string;
-  currentPeriodEnd: string;
-  cancelAtPeriodEnd: boolean;
-  trialEnd?: string;
+interface Plan {
+  id: string
+  name: string
+  price: number
+  interval: 'month' | 'year'
+  features: string[]
+  limits: {
+    queries: number
+    fileSize: number
+    storage: number
+    apiCalls: number
+  }
+  popular?: boolean
+  current?: boolean
 }
 
 interface Usage {
-  current: number;
-  limit: number;
-  resetDate: string;
+  queries: { used: number; limit: number }
+  fileSize: { used: number; limit: number }
+  storage: { used: number; limit: number }
+  apiCalls: { used: number; limit: number }
 }
 
 interface Invoice {
-  id: string;
-  number: string;
-  status: 'paid' | 'pending' | 'failed';
-  amount: number;
-  currency: string;
-  date: string;
-  dueDate?: string;
-  description: string;
-  downloadUrl?: string;
+  id: string
+  date: string
+  amount: number
+  status: 'paid' | 'pending' | 'failed'
+  plan: string
+  period: string
+  downloadUrl?: string
 }
 
 interface PaymentMethod {
-  id: string;
-  type: 'card' | 'bank_transfer';
-  last4?: string;
-  brand?: string;
-  expiryMonth?: number;
-  expiryYear?: number;
-  isDefault: boolean;
-}
-
-interface PlanFeature {
-  name: string;
-  included: boolean;
-  limit?: string;
-}
-
-interface Plan {
-  id: 'free' | 'pro' | 'enterprise';
-  name: string;
-  price: number;
-  currency: string;
-  interval: 'month' | 'year';
-  description: string;
-  features: PlanFeature[];
-  popular?: boolean;
-  badge?: string;
+  id: string
+  type: 'card' | 'bank'
+  last4: string
+  brand: string
+  expiryMonth: number
+  expiryYear: number
+  isDefault: boolean
 }
 
 export default function BillingPage() {
-  const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Mock data
-  const [subscription] = useState<Subscription>({
-    id: 'sub_1234567890',
-    plan: 'pro',
-    status: 'active',
-    currentPeriodStart: '2024-01-01T00:00:00Z',
-    currentPeriodEnd: '2024-02-01T00:00:00Z',
-    cancelAtPeriodEnd: false
-  });
-  
-  const [usage] = useState<{
-    apiCalls: Usage;
-    storage: Usage;
-    exports: Usage;
-  }>({
-    apiCalls: {
-      current: 8750,
-      limit: 10000,
-      resetDate: '2024-02-01T00:00:00Z'
+  const { user } = useAuth()
+  const [activeTab, setActiveTab] = useState("overview")
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Mock current plan and usage
+  const currentPlan: Plan = {
+    id: "pro",
+    name: "Pro",
+    price: 299000,
+    interval: "month",
+    features: [
+      "500 AI Queries per bulan",
+      "File upload hingga 50MB",
+      "10GB Storage",
+      "Priority Support",
+      "Advanced Analytics",
+      "API Access"
+    ],
+    limits: {
+      queries: 500,
+      fileSize: 50,
+      storage: 10240,
+      apiCalls: 10000
     },
-    storage: {
-      current: 2.3,
-      limit: 10,
-      resetDate: '2024-02-01T00:00:00Z'
+    current: true
+  }
+
+  const usage: Usage = {
+    queries: { used: 287, limit: 500 },
+    fileSize: { used: 32, limit: 50 },
+    storage: { used: 6.8, limit: 10 },
+    apiCalls: { used: 7234, limit: 10000 }
+  }
+
+  // Available plans
+  const plans: Plan[] = [
+    {
+      id: "starter",
+      name: "Starter",
+      price: 0,
+      interval: "month",
+      features: [
+        "50 AI Queries per bulan",
+        "File upload hingga 5MB",
+        "1GB Storage",
+        "Email Support",
+        "Basic Analytics"
+      ],
+      limits: {
+        queries: 50,
+        fileSize: 5,
+        storage: 1024,
+        apiCalls: 1000
+      }
     },
-    exports: {
-      current: 45,
-      limit: 100,
-      resetDate: '2024-02-01T00:00:00Z'
+    {
+      id: "pro",
+      name: "Pro",
+      price: 299000,
+      interval: "month",
+      features: [
+        "500 AI Queries per bulan",
+        "File upload hingga 50MB",
+        "10GB Storage",
+        "Priority Support",
+        "Advanced Analytics",
+        "API Access"
+      ],
+      limits: {
+        queries: 500,
+        fileSize: 50,
+        storage: 10240,
+        apiCalls: 10000
+      },
+      popular: true,
+      current: true
+    },
+    {
+      id: "enterprise",
+      name: "Enterprise",
+      price: 999000,
+      interval: "month",
+      features: [
+        "Unlimited AI Queries",
+        "File upload hingga 500MB",
+        "100GB Storage",
+        "24/7 Phone Support",
+        "Custom Analytics",
+        "Full API Access",
+        "White-label Solution",
+        "Dedicated Account Manager"
+      ],
+      limits: {
+        queries: -1, // unlimited
+        fileSize: 500,
+        storage: 102400,
+        apiCalls: -1 // unlimited
+      }
     }
-  });
-  
-  const [invoices] = useState<Invoice[]>([
+  ]
+
+  // Mock invoices
+  const invoices: Invoice[] = [
     {
-      id: 'inv_001',
-      number: 'INV-2024-001',
-      status: 'paid',
+      id: "inv-2024-001",
+      date: "2024-01-01T00:00:00Z",
       amount: 299000,
-      currency: 'IDR',
-      date: '2024-01-01T00:00:00Z',
-      description: 'SpreadsheetAI Pro - Januari 2024',
-      downloadUrl: '#'
+      status: "paid",
+      plan: "Pro Plan",
+      period: "Jan 2024 - Feb 2024",
+      downloadUrl: "/invoices/inv-2024-001.pdf"
     },
     {
-      id: 'inv_002',
-      number: 'INV-2023-012',
-      status: 'paid',
+      id: "inv-2023-012",
+      date: "2023-12-01T00:00:00Z",
       amount: 299000,
-      currency: 'IDR',
-      date: '2023-12-01T00:00:00Z',
-      description: 'SpreadsheetAI Pro - Desember 2023',
-      downloadUrl: '#'
+      status: "paid",
+      plan: "Pro Plan",
+      period: "Dec 2023 - Jan 2024",
+      downloadUrl: "/invoices/inv-2023-012.pdf"
     },
     {
-      id: 'inv_003',
-      number: 'INV-2023-011',
-      status: 'paid',
+      id: "inv-2023-011",
+      date: "2023-11-01T00:00:00Z",
       amount: 299000,
-      currency: 'IDR',
-      date: '2023-11-01T00:00:00Z',
-      description: 'SpreadsheetAI Pro - November 2023',
-      downloadUrl: '#'
+      status: "paid",
+      plan: "Pro Plan",
+      period: "Nov 2023 - Dec 2023",
+      downloadUrl: "/invoices/inv-2023-011.pdf"
     }
-  ]);
-  
-  const [paymentMethods] = useState<PaymentMethod[]>([
+  ]
+
+  // Mock payment methods
+  const paymentMethods: PaymentMethod[] = [
     {
-      id: 'pm_001',
-      type: 'card',
-      last4: '4242',
-      brand: 'visa',
+      id: "pm-1",
+      type: "card",
+      last4: "4242",
+      brand: "Visa",
       expiryMonth: 12,
       expiryYear: 2025,
       isDefault: true
-    }
-  ]);
-  
-  const plans: Plan[] = [
-    {
-      id: 'free',
-      name: 'Free',
-      price: 0,
-      currency: 'IDR',
-      interval: 'month',
-      description: 'Untuk penggunaan personal dan eksplorasi',
-      features: [
-        { name: 'API Calls per bulan', included: true, limit: '1,000' },
-        { name: 'Storage', included: true, limit: '100 MB' },
-        { name: 'Export per bulan', included: true, limit: '10' },
-        { name: 'Email Support', included: true },
-        { name: 'Basic Analytics', included: true },
-        { name: 'Advanced Features', included: false },
-        { name: 'Priority Support', included: false },
-        { name: 'Custom Integrations', included: false }
-      ]
     },
     {
-      id: 'pro',
-      name: 'Pro',
-      price: 299000,
-      currency: 'IDR',
-      interval: 'month',
-      description: 'Untuk profesional dan tim kecil',
-      popular: true,
-      badge: 'Paling Populer',
-      features: [
-        { name: 'API Calls per bulan', included: true, limit: '10,000' },
-        { name: 'Storage', included: true, limit: '10 GB' },
-        { name: 'Export per bulan', included: true, limit: '100' },
-        { name: 'Email Support', included: true },
-        { name: 'Basic Analytics', included: true },
-        { name: 'Advanced Features', included: true },
-        { name: 'Priority Support', included: true },
-        { name: 'Custom Integrations', included: false }
-      ]
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      price: 999000,
-      currency: 'IDR',
-      interval: 'month',
-      description: 'Untuk perusahaan dan tim besar',
-      badge: 'Terlengkap',
-      features: [
-        { name: 'API Calls per bulan', included: true, limit: 'Unlimited' },
-        { name: 'Storage', included: true, limit: '100 GB' },
-        { name: 'Export per bulan', included: true, limit: 'Unlimited' },
-        { name: 'Email Support', included: true },
-        { name: 'Basic Analytics', included: true },
-        { name: 'Advanced Features', included: true },
-        { name: 'Priority Support', included: true },
-        { name: 'Custom Integrations', included: true }
-      ]
+      id: "pm-2",
+      type: "card",
+      last4: "5555",
+      brand: "Mastercard",
+      expiryMonth: 8,
+      expiryYear: 2026,
+      isDefault: false
     }
-  ];
-  
-  // Helper functions
-  const formatCurrency = (amount: number, currency: string = 'IDR') => {
+  ]
+
+  const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
-      currency: currency,
+      currency: 'IDR',
       minimumFractionDigits: 0
-    }).format(amount);
-  };
-  
+    }).format(amount)
+  }
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
-    });
-  };
-  
+    })
+  }
+
+  const getUsagePercentage = (used: number, limit: number) => {
+    if (limit === -1) return 0 // unlimited
+    return Math.min((used / limit) * 100, 100)
+  }
+
+  const getUsageColor = (percentage: number) => {
+    if (percentage >= 90) return "text-red-600"
+    if (percentage >= 75) return "text-yellow-600"
+    return "text-green-600"
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'paid':
+        return <CheckCircle className="h-4 w-4 text-green-600" />
+      case 'pending':
+        return <Clock className="h-4 w-4 text-yellow-600" />
+      case 'failed':
+        return <AlertCircle className="h-4 w-4 text-red-600" />
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-600" />
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
       case 'paid':
-        return 'bg-green-100 text-green-800';
-      case 'canceled':
-      case 'failed':
-        return 'bg-red-100 text-red-800';
-      case 'past_due':
+        return 'bg-green-100 text-green-800'
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'trialing':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-yellow-100 text-yellow-800'
+      case 'failed':
+        return 'bg-red-100 text-red-800'
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800'
     }
-  };
-  
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active': return 'Aktif';
-      case 'canceled': return 'Dibatalkan';
-      case 'past_due': return 'Terlambat';
-      case 'trialing': return 'Trial';
-      case 'paid': return 'Lunas';
-      case 'pending': return 'Pending';
-      case 'failed': return 'Gagal';
-      default: return status;
-    }
-  };
-  
-  const getPlanIcon = (planId: string) => {
-    switch (planId) {
-      case 'free': return Star;
-      case 'pro': return Crown;
-      case 'enterprise': return Sparkles;
-      default: return Star;
-    }
-  };
-  
-  // Event handlers
+  }
+
   const handleUpgradePlan = async (planId: string) => {
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success(`Berhasil upgrade ke plan ${planId}`);
-    } catch (error) {
-      toast.error('Gagal melakukan upgrade');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const handleCancelSubscription = async () => {
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success('Langganan berhasil dibatalkan');
-    } catch (error) {
-      toast.error('Gagal membatalkan langganan');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const handleDownloadInvoice = async (invoiceId: string) => {
-    try {
-      // Simulate download
-      toast.success('Invoice berhasil didownload');
-    } catch (error) {
-      toast.error('Gagal mendownload invoice');
-    }
-  };
-  
-  const currentPlan = plans.find(plan => plan.id === subscription.plan);
-  
+    setIsLoading(true)
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false)
+      toast.success(`Berhasil upgrade ke ${plans.find(p => p.id === planId)?.name} Plan!`)
+    }, 2000)
+  }
+
+  const handleDownloadInvoice = (invoice: Invoice) => {
+    // Simulate download
+    toast.success(`Mengunduh invoice ${invoice.id}`)
+  }
+
+  const handleAddPaymentMethod = () => {
+    toast.success("Redirecting to payment method setup...")
+  }
+
+  const handleCancelSubscription = () => {
+    toast.success("Subscription cancellation request submitted")
+  }
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto py-8 space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Billing & Langganan</h1>
-          <p className="text-gray-600 mt-2">
-            Kelola langganan, pembayaran, dan penggunaan Anda
-          </p>
+        <div className="flex items-center gap-3">
+          <CreditCard className="h-8 w-8 text-primary" />
+          <div>
+            <h1 className="text-3xl font-bold">Billing & Subscription</h1>
+            <p className="text-muted-foreground">
+              Manage your subscription, usage, and billing information
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Download Invoices
+          </Button>
+          <Button>
+            <ArrowUpRight className="h-4 w-4 mr-2" />
+            Upgrade Plan
+          </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
+      {/* Current Plan Overview */}
+      <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Crown className="h-6 w-6 text-primary" />
+              <div>
+                <CardTitle className="text-xl">{currentPlan.name} Plan</CardTitle>
+                <CardDescription>
+                  {formatCurrency(currentPlan.price)}/{currentPlan.interval === 'month' ? 'bulan' : 'tahun'}
+                </CardDescription>
+              </div>
+            </div>
+            <Badge className="bg-primary text-primary-foreground">
+              Current Plan
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-1">
+                  <Target className="h-4 w-4" />
+                  AI Queries
+                </span>
+                <span className={getUsageColor(getUsagePercentage(usage.queries.used, usage.queries.limit))}>
+                  {usage.queries.used}/{usage.queries.limit === -1 ? '∞' : usage.queries.limit}
+                </span>
+              </div>
+              <Progress 
+                value={getUsagePercentage(usage.queries.used, usage.queries.limit)} 
+                className="h-2" 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-1">
+                  <FileText className="h-4 w-4" />
+                  File Size
+                </span>
+                <span className={getUsageColor(getUsagePercentage(usage.fileSize.used, usage.fileSize.limit))}>
+                  {usage.fileSize.used}/{usage.fileSize.limit}MB
+                </span>
+              </div>
+              <Progress 
+                value={getUsagePercentage(usage.fileSize.used, usage.fileSize.limit)} 
+                className="h-2" 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-1">
+                  <Database className="h-4 w-4" />
+                  Storage
+                </span>
+                <span className={getUsageColor(getUsagePercentage(usage.storage.used * 1024, usage.storage.limit))}>
+                  {usage.storage.used}/{usage.storage.limit}GB
+                </span>
+              </div>
+              <Progress 
+                value={getUsagePercentage(usage.storage.used * 1024, usage.storage.limit)} 
+                className="h-2" 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-1">
+                  <Zap className="h-4 w-4" />
+                  API Calls
+                </span>
+                <span className={getUsageColor(getUsagePercentage(usage.apiCalls.used, usage.apiCalls.limit))}>
+                  {usage.apiCalls.used}/{usage.apiCalls.limit === -1 ? '∞' : usage.apiCalls.limit}
+                </span>
+              </div>
+              <Progress 
+                value={getUsagePercentage(usage.apiCalls.used, usage.apiCalls.limit)} 
+                className="h-2" 
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="plans" className="flex items-center gap-2">
-            <Crown className="h-4 w-4" />
-            Plans
-          </TabsTrigger>
-          <TabsTrigger value="invoices" className="flex items-center gap-2">
-            <Receipt className="h-4 w-4" />
-            Invoices
-          </TabsTrigger>
-          <TabsTrigger value="payment" className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            Payment
-          </TabsTrigger>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="plans">Plans</TabsTrigger>
+          <TabsTrigger value="invoices">Invoices</TabsTrigger>
+          <TabsTrigger value="payment">Payment</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          {/* Current Subscription */}
+          {/* Usage Statistics */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                {currentPlan && (
-                  <>
-                    {(() => {
-                      const Icon = getPlanIcon(currentPlan.id);
-                      return <Icon className="h-5 w-5" />;
-                    })()}
-                    Langganan Saat Ini
-                  </>
-                )}
+                <BarChart3 className="h-5 w-5" />
+                Usage Statistics
               </CardTitle>
               <CardDescription>
-                Informasi langganan dan status pembayaran
+                Your current month usage and limits
               </CardDescription>
             </CardHeader>
-            
             <CardContent>
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-2xl font-bold text-gray-900">
-                      {currentPlan?.name}
-                    </h3>
-                    <Badge className={getStatusColor(subscription.status)}>
-                      {getStatusText(subscription.status)}
-                    </Badge>
-                    {currentPlan?.popular && (
-                      <Badge variant="secondary">{currentPlan.badge}</Badge>
-                    )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold">AI Queries</h4>
+                    <span className="text-sm text-muted-foreground">
+                      {usage.queries.used} of {usage.queries.limit} used
+                    </span>
                   </div>
+                  <Progress value={getUsagePercentage(usage.queries.used, usage.queries.limit)} />
                   
-                  <p className="text-gray-600 mb-4">{currentPlan?.description}</p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500">Harga:</span>
-                      <p className="font-semibold">
-                        {currentPlan ? formatCurrency(currentPlan.price) : '-'}/bulan
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <span className="text-gray-500">Periode Saat Ini:</span>
-                      <p className="font-semibold">
-                        {formatDate(subscription.currentPeriodStart)} - {formatDate(subscription.currentPeriodEnd)}
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <span className="text-gray-500">Perpanjangan Otomatis:</span>
-                      <p className="font-semibold">
-                        {subscription.cancelAtPeriodEnd ? 'Nonaktif' : 'Aktif'}
-                      </p>
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold">Storage</h4>
+                    <span className="text-sm text-muted-foreground">
+                      {usage.storage.used}GB of {usage.storage.limit}GB used
+                    </span>
                   </div>
+                  <Progress value={getUsagePercentage(usage.storage.used * 1024, usage.storage.limit)} />
                 </div>
                 
-                <div className="flex gap-2">
-                  <Button variant="outline">
-                    Ubah Plan
-                  </Button>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold">File Upload Size</h4>
+                    <span className="text-sm text-muted-foreground">
+                      Max {usage.fileSize.limit}MB per file
+                    </span>
+                  </div>
+                  <Progress value={getUsagePercentage(usage.fileSize.used, usage.fileSize.limit)} />
                   
-                  {!subscription.cancelAtPeriodEnd && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" className="text-red-600">
-                          Batalkan
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle className="flex items-center gap-2">
-                            <AlertTriangle className="h-5 w-5 text-red-500" />
-                            Batalkan Langganan
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Langganan akan dibatalkan pada akhir periode billing saat ini. 
-                            Anda masih dapat menggunakan fitur Pro hingga {formatDate(subscription.currentPeriodEnd)}.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Batal</AlertDialogCancel>
-                          <AlertDialogAction 
-                            onClick={handleCancelSubscription}
-                            className="bg-red-600 hover:bg-red-700"
-                          >
-                            Ya, Batalkan
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold">API Calls</h4>
+                    <span className="text-sm text-muted-foreground">
+                      {usage.apiCalls.used} of {usage.apiCalls.limit === -1 ? '∞' : usage.apiCalls.limit} used
+                    </span>
+                  </div>
+                  <Progress value={getUsagePercentage(usage.apiCalls.used, usage.apiCalls.limit)} />
                 </div>
               </div>
             </CardContent>
           </Card>
-          
-          {/* Usage Statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Zap className="h-4 w-4" />
-                  API Calls
-                </CardTitle>
-              </CardHeader>
-              
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold">
-                      {usage.apiCalls.current.toLocaleString('id-ID')}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      / {usage.apiCalls.limit.toLocaleString('id-ID')}
-                    </span>
-                  </div>
-                  
-                  <Progress 
-                    value={(usage.apiCalls.current / usage.apiCalls.limit) * 100} 
-                    className="h-2"
-                  />
-                  
-                  <p className="text-xs text-gray-500">
-                    Reset pada {formatDate(usage.apiCalls.resetDate)}
-                  </p>
+
+          {/* Next Billing */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Next Billing
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold">Next billing date: February 1, 2024</p>
+                  <p className="text-muted-foreground">Amount: {formatCurrency(currentPlan.price)}</p>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Storage
-                </CardTitle>
-              </CardHeader>
-              
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold">
-                      {usage.storage.current} GB
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      / {usage.storage.limit} GB
-                    </span>
-                  </div>
-                  
-                  <Progress 
-                    value={(usage.storage.current / usage.storage.limit) * 100} 
-                    className="h-2"
-                  />
-                  
-                  <p className="text-xs text-gray-500">
-                    Reset pada {formatDate(usage.storage.resetDate)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Download className="h-4 w-4" />
-                  Exports
-                </CardTitle>
-              </CardHeader>
-              
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold">
-                      {usage.exports.current}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      / {usage.exports.limit}
-                    </span>
-                  </div>
-                  
-                  <Progress 
-                    value={(usage.exports.current / usage.exports.limit) * 100} 
-                    className="h-2"
-                  />
-                  
-                  <p className="text-xs text-gray-500">
-                    Reset pada {formatDate(usage.exports.resetDate)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                <Button variant="outline">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Update Billing
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Plans Tab */}
         <TabsContent value="plans" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {plans.map((plan) => {
-              const Icon = getPlanIcon(plan.id);
-              const isCurrentPlan = plan.id === subscription.plan;
-              
-              return (
-                <Card 
-                  key={plan.id} 
-                  className={`relative ${plan.popular ? 'border-blue-500 shadow-lg' : ''} ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
-                >
-                  {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <Badge className="bg-blue-500 text-white">
-                        {plan.badge}
-                      </Badge>
+            {plans.map((plan) => (
+              <Card key={plan.id} className={`relative ${plan.popular ? 'border-primary shadow-lg' : ''} ${plan.current ? 'bg-muted/50' : ''}`}>
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-primary text-primary-foreground">
+                      <Star className="h-3 w-3 mr-1" />
+                      Most Popular
+                    </Badge>
+                  </div>
+                )}
+                
+                <CardHeader className="text-center">
+                  <CardTitle className="text-xl">{plan.name}</CardTitle>
+                  <div className="space-y-2">
+                    <div className="text-3xl font-bold">
+                      {plan.price === 0 ? 'Free' : formatCurrency(plan.price)}
                     </div>
-                  )}
+                    {plan.price > 0 && (
+                      <p className="text-muted-foreground">per {plan.interval === 'month' ? 'bulan' : 'tahun'}</p>
+                    )}
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="space-y-4">
+                  <ul className="space-y-2">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
                   
-                  {isCurrentPlan && (
-                    <div className="absolute -top-3 right-4">
-                      <Badge className="bg-green-500 text-white">
-                        Plan Saat Ini
-                      </Badge>
-                    </div>
-                  )}
+                  <Separator />
                   
-                  <CardHeader className="text-center pb-4">
-                    <div className="flex justify-center mb-4">
-                      <div className={`p-3 rounded-full ${
-                        plan.id === 'free' ? 'bg-gray-100' :
-                        plan.id === 'pro' ? 'bg-blue-100' :
-                        'bg-purple-100'
-                      }`}>
-                        <Icon className={`h-8 w-8 ${
-                          plan.id === 'free' ? 'text-gray-600' :
-                          plan.id === 'pro' ? 'text-blue-600' :
-                          'text-purple-600'
-                        }`} />
-                      </div>
-                    </div>
-                    
-                    <CardTitle className="text-xl">{plan.name}</CardTitle>
-                    
-                    <div className="text-3xl font-bold text-gray-900">
-                      {formatCurrency(plan.price)}
-                      <span className="text-base font-normal text-gray-500">/{plan.interval}</span>
-                    </div>
-                    
-                    <CardDescription className="mt-2">
-                      {plan.description}
-                    </CardDescription>
-                  </CardHeader>
-                  
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      {plan.features.map((feature, index) => (
-                        <div key={index} className="flex items-start gap-3">
-                          {feature.included ? (
-                            <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          ) : (
-                            <X className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                          )}
-                          
-                          <div className="flex-1">
-                            <span className={feature.included ? 'text-gray-900' : 'text-gray-400'}>
-                              {feature.name}
-                            </span>
-                            {feature.limit && (
-                              <span className="text-sm text-gray-500 ml-1">
-                                ({feature.limit})
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <div className="pt-4">
-                      {isCurrentPlan ? (
-                        <Button className="w-full" disabled>
-                          Plan Saat Ini
-                        </Button>
+                  {plan.current ? (
+                    <Button disabled className="w-full">
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Current Plan
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={() => handleUpgradePlan(plan.id)}
+                      disabled={isLoading}
+                      className="w-full"
+                      variant={plan.popular ? 'default' : 'outline'}
+                    >
+                      {isLoading ? (
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                       ) : (
-                        <Button 
-                          className="w-full" 
-                          variant={plan.popular ? 'default' : 'outline'}
-                          onClick={() => handleUpgradePlan(plan.id)}
-                          disabled={isLoading}
-                        >
-                          {isLoading ? (
-                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                          ) : (
-                            <ArrowRight className="h-4 w-4 mr-2" />
-                          )}
-                          {plan.id === 'free' ? 'Downgrade' : 'Upgrade'}
-                        </Button>
+                        <ArrowUpRight className="h-4 w-4 mr-2" />
                       )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                      {plan.price === 0 ? 'Downgrade' : 'Upgrade'}
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
           </div>
+          
+          {/* Plan Comparison */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Plan Comparison</CardTitle>
+              <CardDescription>
+                Compare features across all plans
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-2">Feature</th>
+                      {plans.map(plan => (
+                        <th key={plan.id} className="text-center p-2">{plan.name}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b">
+                      <td className="p-2 font-medium">AI Queries</td>
+                      {plans.map(plan => (
+                        <td key={plan.id} className="text-center p-2">
+                          {plan.limits.queries === -1 ? 'Unlimited' : plan.limits.queries}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr className="border-b">
+                      <td className="p-2 font-medium">File Size</td>
+                      {plans.map(plan => (
+                        <td key={plan.id} className="text-center p-2">
+                          {plan.limits.fileSize}MB
+                        </td>
+                      ))}
+                    </tr>
+                    <tr className="border-b">
+                      <td className="p-2 font-medium">Storage</td>
+                      {plans.map(plan => (
+                        <td key={plan.id} className="text-center p-2">
+                          {plan.limits.storage / 1024}GB
+                        </td>
+                      ))}
+                    </tr>
+                    <tr className="border-b">
+                      <td className="p-2 font-medium">API Calls</td>
+                      {plans.map(plan => (
+                        <td key={plan.id} className="text-center p-2">
+                          {plan.limits.apiCalls === -1 ? 'Unlimited' : plan.limits.apiCalls}
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Invoices Tab */}
@@ -685,39 +634,42 @@ export default function BillingPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Receipt className="h-5 w-5" />
-                Riwayat Invoice
+                Billing History
               </CardTitle>
               <CardDescription>
-                Lihat dan download invoice pembayaran Anda
+                Download and view your past invoices
               </CardDescription>
             </CardHeader>
-            
             <CardContent>
               <div className="space-y-4">
                 {invoices.map((invoice) => (
                   <div key={invoice.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-1">
-                        <h3 className="font-medium text-gray-900">{invoice.number}</h3>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(invoice.status)}
                         <Badge className={getStatusColor(invoice.status)}>
-                          {getStatusText(invoice.status)}
+                          {invoice.status}
                         </Badge>
                       </div>
-                      
-                      <p className="text-sm text-gray-600 mb-1">{invoice.description}</p>
-                      
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span>Tanggal: {formatDate(invoice.date)}</span>
-                        <span>Jumlah: {formatCurrency(invoice.amount, invoice.currency)}</span>
+                      <div>
+                        <h4 className="font-semibold">{invoice.id}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {invoice.plan} • {invoice.period}
+                        </p>
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-2">
-                      {invoice.status === 'paid' && invoice.downloadUrl && (
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="font-semibold">{formatCurrency(invoice.amount)}</p>
+                        <p className="text-sm text-muted-foreground">{formatDate(invoice.date)}</p>
+                      </div>
+                      
+                      {invoice.status === 'paid' && (
                         <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleDownloadInvoice(invoice.id)}
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleDownloadInvoice(invoice)}
                         >
                           <Download className="h-4 w-4 mr-2" />
                           Download
@@ -726,16 +678,6 @@ export default function BillingPage() {
                     </div>
                   </div>
                 ))}
-                
-                {invoices.length === 0 && (
-                  <div className="text-center py-8">
-                    <Receipt className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">Belum ada invoice</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Invoice akan muncul setelah pembayaran pertama
-                    </p>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -743,116 +685,116 @@ export default function BillingPage() {
 
         {/* Payment Tab */}
         <TabsContent value="payment" className="space-y-6">
+          {/* Payment Methods */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Metode Pembayaran
+                <Wallet className="h-5 w-5" />
+                Payment Methods
               </CardTitle>
               <CardDescription>
-                Kelola metode pembayaran untuk langganan Anda
+                Manage your payment methods and billing information
               </CardDescription>
             </CardHeader>
-            
-            <CardContent className="space-y-6">
-              {/* Payment Methods */}
-              <div className="space-y-4">
-                {paymentMethods.map((method) => (
-                  <div key={method.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 bg-gray-100 rounded">
-                        <CreditCard className="h-6 w-6 text-gray-600" />
-                      </div>
-                      
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-gray-900 capitalize">
-                            {method.brand} •••• {method.last4}
-                          </span>
-                          {method.isDefault && (
-                            <Badge variant="secondary">Default</Badge>
-                          )}
-                        </div>
-                        
-                        <p className="text-sm text-gray-600">
-                          Expires {method.expiryMonth?.toString().padStart(2, '0')}/{method.expiryYear}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      {!method.isDefault && (
-                        <Button size="sm" variant="outline">
-                          Set Default
-                        </Button>
-                      )}
-                      
-                      <Button size="sm" variant="outline" className="text-red-600">
-                        Hapus
-                      </Button>
+            <CardContent className="space-y-4">
+              {paymentMethods.map((method) => (
+                <div key={method.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <CreditCard className="h-8 w-8 text-muted-foreground" />
+                    <div>
+                      <h4 className="font-semibold">
+                        {method.brand} •••• {method.last4}
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Expires {method.expiryMonth.toString().padStart(2, '0')}/{method.expiryYear}
+                      </p>
                     </div>
                   </div>
-                ))}
-                
-                {paymentMethods.length === 0 && (
-                  <div className="text-center py-8">
-                    <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">Belum ada metode pembayaran</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Tambahkan kartu kredit atau metode pembayaran lainnya
-                    </p>
+                  
+                  <div className="flex items-center gap-2">
+                    {method.isDefault && (
+                      <Badge variant="secondary">Default</Badge>
+                    )}
+                    <Button variant="outline" size="sm">
+                      Edit
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      Remove
+                    </Button>
                   </div>
-                )}
+                </div>
+              ))}
+              
+              <Button onClick={handleAddPaymentMethod} className="w-full" variant="outline">
+                <CreditCard className="h-4 w-4 mr-2" />
+                Add Payment Method
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Subscription Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Subscription Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div>
+                  <h4 className="font-semibold">Current Subscription</h4>
+                  <p className="text-muted-foreground">
+                    {currentPlan.name} Plan - {formatCurrency(currentPlan.price)}/month
+                  </p>
+                </div>
+                <Button variant="outline" onClick={() => setActiveTab("plans")}>
+                  Change Plan
+                </Button>
+              </div>
+              
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div>
+                  <h4 className="font-semibold">Auto-renewal</h4>
+                  <p className="text-muted-foreground">
+                    Your subscription will automatically renew on February 1, 2024
+                  </p>
+                </div>
+                <Button variant="outline">
+                  Manage
+                </Button>
               </div>
               
               <Separator />
               
-              <Button className="w-full md:w-auto">
-                <CreditCard className="h-4 w-4 mr-2" />
-                Tambah Metode Pembayaran
-              </Button>
-            </CardContent>
-          </Card>
-          
-          {/* Billing Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Informasi Billing</CardTitle>
-              <CardDescription>
-                Informasi yang akan muncul di invoice Anda
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <span className="text-sm text-gray-500">Nama:</span>
-                  <p className="font-medium">John Doe</p>
-                </div>
-                
-                <div>
-                  <span className="text-sm text-gray-500">Email:</span>
-                  <p className="font-medium">john.doe@example.com</p>
-                </div>
-                
-                <div>
-                  <span className="text-sm text-gray-500">Perusahaan:</span>
-                  <p className="font-medium">Tech Corp</p>
-                </div>
-                
-                <div>
-                  <span className="text-sm text-gray-500">Alamat:</span>
-                  <p className="font-medium">Jakarta, Indonesia</p>
-                </div>
+              <div className="space-y-4">
+                <h4 className="font-semibold text-red-600">Danger Zone</h4>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive">
+                      Cancel Subscription
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Cancel Subscription</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to cancel your subscription? You will lose access to Pro features at the end of your current billing period.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleCancelSubscription}>
+                        Cancel Subscription
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
-              
-              <Button variant="outline">
-                Edit Informasi Billing
-              </Button>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

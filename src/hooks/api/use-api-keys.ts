@@ -19,7 +19,7 @@ export function useCreateAPIKey() {
       data: CreateAPIKeyRequest,
     ): Promise<CreateAPIKeyResponse> => {
       const response = await apiClient.post<CreateAPIKeyResponse>(
-        "/api-keys",
+        "/api/v1/user/api-keys",
         data,
       );
       return response.data;
@@ -41,7 +41,7 @@ export function useAPIKeys() {
   return useQuery({
     queryKey: ["api-keys"],
     queryFn: async (): Promise<Omit<APIKey, "key">[]> => {
-      const response = await apiClient.get<ListAPIKeysResponse>("/api-keys");
+      const response = await apiClient.get<ListAPIKeysResponse>("/api/v1/user/api-keys");
       return response.data.api_keys;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -54,7 +54,7 @@ export function useDeleteAPIKey() {
 
   return useMutation({
     mutationFn: async (keyId: string): Promise<void> => {
-      await apiClient.delete(`/api-keys/${keyId}`);
+      await apiClient.delete(`/api/v1/user/api-keys/${keyId}`);
     },
     onSuccess: () => {
       toast.success("API Key berhasil dihapus");
@@ -75,7 +75,7 @@ export function useRegenerateAPIKey() {
   return useMutation({
     mutationFn: async (keyId: string): Promise<CreateAPIKeyResponse> => {
       const response = await apiClient.post<CreateAPIKeyResponse>(
-        `/api-keys/${keyId}/regenerate`,
+        `/api/v1/user/api-keys/${keyId}/regenerate`,
       );
       return response.data;
     },

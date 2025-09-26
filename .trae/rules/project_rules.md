@@ -4,7 +4,7 @@
 4. Gunakan React Query (TanStack Query) v5
 5. Gunakan React Hook Form dengan Zod validation
 6. Gunakan Axios dengan interceptors
-7. Gunakan JWT via Cookies untuk autentikasi
+7. Gunakan next-auth
 8. Gunakan pnpm sebagai manajer paket
 9. Gunakan Biome.js sebagai linter dan formatter
 10. Gunakan tw-animate-css untuk animasi Tailwind CSS

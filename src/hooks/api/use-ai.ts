@@ -19,7 +19,7 @@ export function useCreateAIQuery() {
       data: CreateAIQueryRequest,
     ): Promise<CreateAIQueryResponse> => {
       const response = await apiClient.post<CreateAIQueryResponse>(
-        "/ai/query",
+        "/api/v1/ai/generate",
         data,
       );
       return response.data;
@@ -57,7 +57,7 @@ export function useAIQueries({
       });
 
       const response = await apiClient.get<GetQueriesResponse>(
-        `/ai/queries?${params}`,
+        `/api/v1/ai/queries?${params}`,
       );
       return response.data;
     },
@@ -70,7 +70,7 @@ export function useAIStats() {
   return useQuery({
     queryKey: ["ai-stats"],
     queryFn: async (): Promise<AIStatsResponse> => {
-      const response = await apiClient.get<AIStatsResponse>("/ai/stats");
+      const response = await apiClient.get<AIStatsResponse>("/api/v1/ai/stats");
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -82,7 +82,7 @@ export function useAIQuery(id: string) {
   return useQuery({
     queryKey: ["ai-query", id],
     queryFn: async () => {
-      const response = await apiClient.get(`/ai/queries/${id}`);
+      const response = await apiClient.get(`/api/v1/ai/queries/${id}`);
       return response.data;
     },
     enabled: !!id,

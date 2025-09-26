@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Eye,
   EyeOff,
@@ -29,7 +28,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/api/use-auth";
+import { signIn, getSession } from "next-auth/react";
 
 const loginSchema = z.object({
   email: z
@@ -48,8 +47,8 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const router = useRouter();
-  const { login } = useAuth();
 
   const {
     register,
@@ -72,27 +71,59 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login({
+      const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
-        rememberMe: data.rememberMe,
+        redirect: false,
       });
 
-      toast.success("Login berhasil! Selamat datang kembali.");
-      router.push("/dashboard");
+      if (result?.error) {
+        toast.error("Email atau password salah. Silakan coba lagi.");
+        return;
+      }
+
+      if (result?.ok) {
+        toast.success("Login berhasil! Selamat datang kembali.");
+        
+        // Get fresh session to ensure user data is available
+        await getSession();
+        
+        // Redirect to dashboard
+        router.push("/dashboard");
+        router.refresh();
+      }
     } catch (error: any) {
-      toast.error(error.message || "Login gagal. Silakan coba lagi.");
+      console.error("Login error:", error);
+      toast.error("Terjadi kesalahan saat login. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
+    setIsGoogleLoading(true);
+    
     try {
-      // Implement Google OAuth login
-      toast.info("Fitur Google Login akan segera tersedia.");
+      const result = await signIn("google", {
+        redirect: false,
+        callbackUrl: "/dashboard",
+      });
+
+      if (result?.error) {
+        toast.error("Google login gagal. Silakan coba lagi.");
+        return;
+      }
+
+      if (result?.ok) {
+        toast.success("Login dengan Google berhasil!");
+        router.push("/dashboard");
+        router.refresh();
+      }
     } catch (error) {
+      console.error("Google login error:", error);
       toast.error("Google login gagal. Silakan coba lagi.");
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -236,8 +267,12 @@ export default function LoginPage() {
               variant="outline"
               className="w-full"
               onClick={handleGoogleLogin}
+              disabled={isGoogleLoading}
             >
-              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+              {isGoogleLoading ? (
+                <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+              ) : (
+                <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -255,7 +290,8 @@ export default function LoginPage() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Masuk dengan Google
+              )}
+              {isGoogleLoading ? "Memproses..." : "Masuk dengan Google"}
             </Button>
 
             {/* Sign Up Link */}
@@ -285,10 +321,10 @@ export default function LoginPage() {
               </p>
               <div className="text-xs text-blue-600 space-y-1">
                 <p>
-                  <strong>Email:</strong> demo@spreadsheetai.com
+                  <strong>Email:</strong> user@example.com
                 </p>
                 <p>
-                  <strong>Password:</strong> demo123
+                  <strong>Password:</strong> Secret!1
                 </p>
               </div>
             </div>
