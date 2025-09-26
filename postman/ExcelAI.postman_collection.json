@@ -1,0 +1,517 @@
+{
+  "info": {
+    "name": "Excel AI API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "b8c1b1b2-0000-4000-a001-collection-excel-ai"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseServer}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseServer}}/api/v1/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"name\": \"{{name}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseServer}}/api/v1/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let data = pm.response.json();",
+                  "if (data && data.access_token) {",
+                  "  pm.environment.set('authToken', data.access_token);",
+                  "}",
+                  "if (data && data.refresh_token) {pm.environment.set('refreshToken', data.refresh_token);}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseServer}}/api/v1/auth/refresh",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseServer}}/api/v1/auth/me"
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/auth/change-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"{{password}}\",\n  \"new_password\": \"{{newPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseServer}}/api/v1/auth/forgot-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseServer}}/api/v1/auth/reset-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"reset-token-here\",\n  \"new_password\": \"{{newPassword}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI",
+      "item": [
+        {
+          "name": "Providers",
+          "request": {
+            "method": "GET",
+            "url": "{{baseServer}}/api/v1/ai/providers"
+          }
+        },
+        {
+          "name": "Providers Health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseServer}}/api/v1/ai/providers/health"
+          }
+        },
+        {
+          "name": "Generate",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/ai/generate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"Generate a summary for Q2 results\",\n  \"provider\": \"openai\",\n  \"query_type\": \"analysis\",\n  \"spreadsheet_id\": \"{{spreadsheetId}}\",\n  \"language\": \"en\",\n  \"temperature\": 0.7,\n  \"max_tokens\": 1000\n}"
+            }
+          }
+        },
+        {
+          "name": "Queries",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseServer}}/api/v1/ai/queries?limit=20&offset=0"
+          }
+        },
+        {
+          "name": "User Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseServer}}/api/v1/ai/stats"
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseServer}}/api/v1/user/profile"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/user/profile",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{name}}\",\n  \"timezone\": \"UTC\"\n}"
+            }
+          }
+        },
+        {
+          "name": "User Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseServer}}/api/v1/user/stats"
+          }
+        }
+      ]
+    },
+    {
+      "name": "API Keys",
+      "item": [
+        {
+          "name": "Create API Key",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/user/api-keys",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Key\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List API Keys",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseServer}}/api/v1/user/api-keys"
+          }
+        },
+        {
+          "name": "Revoke API Key",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseServer}}/api/v1/user/api-keys/{{apiKeyId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sheets",
+      "item": [
+        {
+          "name": "Create Sheet",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/sheets",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"{{sheetTitle}}\",\n  \"access_token\": \"{{googleAccessToken}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let data = pm.response.json();",
+                  "if (data && data.spreadsheet_id) { pm.environment.set('spreadsheetId', data.spreadsheet_id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Info",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseServer}}/api/v1/sheets/{{spreadsheetId}}"
+          }
+        },
+        {
+          "name": "Read Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/sheets/{{spreadsheetId}}/read",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spreadsheet_id\": \"{{spreadsheetId}}\",\n  \"range\": \"{{range}}\",\n  \"access_token\": \"{{googleAccessToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Write Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/sheets/{{spreadsheetId}}/write",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spreadsheet_id\": \"{{spreadsheetId}}\",\n  \"range\": \"{{range}}\",\n  \"values\": [[\"Hello\", \"World\"]],\n  \"access_token\": \"{{googleAccessToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Append Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/sheets/{{spreadsheetId}}/append",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spreadsheet_id\": \"{{spreadsheetId}}\",\n  \"range\": \"{{range}}\",\n  \"values\": [[\"New\", \"Data\"]],\n  \"access_token\": \"{{googleAccessToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Generate Formula",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/sheets/formula/generate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Calculate sum of column A\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Analyze Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/sheets/{{spreadsheetId}}/analyze",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spreadsheet_id\": \"{{spreadsheetId}}\",\n  \"range\": \"{{range}}\",\n  \"analysis_type\": \"summary\",\n  \"access_token\": \"{{googleAccessToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Dashboard",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/sheets/{{spreadsheetId}}/dashboard",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spreadsheet_id\": \"{{spreadsheetId}}\",\n  \"range\": \"{{range}}\",\n  \"dashboard_type\": \"chart\",\n  \"access_token\": \"{{googleAccessToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Sync Metadata",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/sheets/{{spreadsheetId}}/sync",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spreadsheet_id\": \"{{spreadsheetId}}\",\n  \"access_token\": \"{{googleAccessToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Apps Script",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/sheets/apps-script",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"script_content\": \"function myFunction() { return 'Hello World'; }\",\n  \"access_token\": \"{{googleAccessToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Generate Formula",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/sheets/formula/generate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Sum values in A1:A10\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Analyze Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/sheets/{{spreadsheetId}}/analyze",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spreadsheet_id\": \"{{spreadsheetId}}\",\n  \"range\": \"{{range}}\",\n  \"analysis_type\": \"summary\",\n  \"access_token\": \"{{googleAccessToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Dashboard",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/sheets/{{spreadsheetId}}/dashboard",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spreadsheet_id\": \"{{spreadsheetId}}\",\n  \"range\": \"{{range}}\",\n  \"dashboard_type\": \"sales\",\n  \"access_token\": \"{{googleAccessToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Validate Access",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseServer}}/api/v1/sheets/validate"
+          }
+        },
+        {
+          "name": "Sync Metadata",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseServer}}/api/v1/sheets/{{spreadsheetId}}/sync",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spreadsheet_id\": \"{{spreadsheetId}}\",\n  \"access_token\": \"{{googleAccessToken}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "API Key System Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseServer}}/api/v1/admin/api-keys/stats"
+          }
+        },
+        {
+          "name": "Spreadsheet System Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseServer}}/api/v1/admin/spreadsheets/stats"
+          }
+        }
+      ]
+    }
+  ]
+}
