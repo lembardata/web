@@ -1,81 +1,95 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Separator } from "@/components/ui/separator"
 import {
-  Search,
   Book,
-  Code,
-  FileText,
   ChevronDown,
   ChevronRight,
+  Code,
   Copy,
+  Database,
   ExternalLink,
-  Download,
-  Play,
-  Zap,
-  Shield,
+  FileText,
   Globe,
-  Database
-} from "lucide-react"
-import { toast } from "sonner"
-import { useAuth } from "@/hooks/use-auth"
+  Play,
+  Search,
+  Shield,
+  Zap,
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface DocSection {
-  id: string
-  title: string
-  description: string
-  category: string
-  content: string
-  codeExample?: string
-  method?: string
-  endpoint?: string
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  content: string;
+  codeExample?: string;
+  method?: string;
+  endpoint?: string;
   parameters?: Array<{
-    name: string
-    type: string
-    required: boolean
-    description: string
-  }>
-  response?: string
+    name: string;
+    type: string;
+    required: boolean;
+    description: string;
+  }>;
+  response?: string;
 }
 
 interface GuideItem {
-  id: string
-  title: string
-  description: string
-  category: string
-  readTime: string
-  difficulty: 'Pemula' | 'Menengah' | 'Lanjutan'
-  content: string
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  readTime: string;
+  difficulty: "Pemula" | "Menengah" | "Lanjutan";
+  content: string;
 }
 
 export default function DocumentationPage() {
-  const { user } = useAuth()
-  const [searchQuery, setSearchQuery] = useState('')
-  const [activeCategory, setActiveCategory] = useState('all')
-  const [openSections, setOpenSections] = useState<string[]>(['getting-started'])
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [openSections, setOpenSections] = useState<string[]>([
+    "getting-started",
+  ]);
 
   // Mock data untuk dokumentasi API
   const apiDocs: DocSection[] = [
     {
-      id: 'authentication',
-      title: 'Autentikasi',
-      description: 'Cara mengautentikasi permintaan API Anda',
-      category: 'auth',
-      content: 'Semua permintaan API memerlukan autentikasi menggunakan API key. Sertakan API key Anda di header Authorization.',
+      id: "authentication",
+      title: "Autentikasi",
+      description: "Cara mengautentikasi permintaan API Anda",
+      category: "auth",
+      content:
+        "Semua permintaan API memerlukan autentikasi menggunakan API key. Sertakan API key Anda di header Authorization.",
       codeExample: `curl -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   https://api.spreadsheetai.com/v1/analyze`,
-      method: 'GET',
-      endpoint: '/v1/auth/verify',
+      method: "GET",
+      endpoint: "/v1/auth/verify",
       parameters: [
-        { name: 'Authorization', type: 'string', required: true, description: 'Bearer token dengan API key Anda' }
+        {
+          name: "Authorization",
+          type: "string",
+          required: true,
+          description: "Bearer token dengan API key Anda",
+        },
       ],
       response: `{
   "success": true,
@@ -84,14 +98,15 @@ export default function DocumentationPage() {
     "email": "user@example.com",
     "plan": "pro"
   }
-}`
+}`,
     },
     {
-      id: 'analyze-file',
-      title: 'Analisis File',
-      description: 'Upload dan analisis file spreadsheet',
-      category: 'analysis',
-      content: 'Endpoint ini memungkinkan Anda mengupload file Excel atau CSV dan mendapatkan analisis AI.',
+      id: "analyze-file",
+      title: "Analisis File",
+      description: "Upload dan analisis file spreadsheet",
+      category: "analysis",
+      content:
+        "Endpoint ini memungkinkan Anda mengupload file Excel atau CSV dan mendapatkan analisis AI.",
       codeExample: `const formData = new FormData();
 formData.append('file', fileInput.files[0]);
 formData.append('analysis_type', 'general');
@@ -103,26 +118,42 @@ fetch('https://api.spreadsheetai.com/v1/analyze', {
   },
   body: formData
 });`,
-      method: 'POST',
-      endpoint: '/v1/analyze',
+      method: "POST",
+      endpoint: "/v1/analyze",
       parameters: [
-        { name: 'file', type: 'file', required: true, description: 'File Excel atau CSV (max 10MB)' },
-        { name: 'analysis_type', type: 'string', required: false, description: 'Jenis analisis: general, financial, statistical' },
-        { name: 'query', type: 'string', required: false, description: 'Pertanyaan spesifik tentang data' }
+        {
+          name: "file",
+          type: "file",
+          required: true,
+          description: "File Excel atau CSV (max 10MB)",
+        },
+        {
+          name: "analysis_type",
+          type: "string",
+          required: false,
+          description: "Jenis analisis: general, financial, statistical",
+        },
+        {
+          name: "query",
+          type: "string",
+          required: false,
+          description: "Pertanyaan spesifik tentang data",
+        },
       ],
       response: `{
   "success": true,
   "analysis_id": "analysis_123",
   "status": "processing",
   "estimated_time": 30
-}`
+}`,
     },
     {
-      id: 'get-analysis',
-      title: 'Ambil Hasil Analisis',
-      description: 'Mendapatkan hasil analisis yang telah selesai',
-      category: 'analysis',
-      content: 'Gunakan endpoint ini untuk mengambil hasil analisis berdasarkan ID.',
+      id: "get-analysis",
+      title: "Ambil Hasil Analisis",
+      description: "Mendapatkan hasil analisis yang telah selesai",
+      category: "analysis",
+      content:
+        "Gunakan endpoint ini untuk mengambil hasil analisis berdasarkan ID.",
       codeExample: `fetch('https://api.spreadsheetai.com/v1/analysis/analysis_123', {
   method: 'GET',
   headers: {
@@ -130,10 +161,15 @@ fetch('https://api.spreadsheetai.com/v1/analyze', {
     'Content-Type': 'application/json'
   }
 });`,
-      method: 'GET',
-      endpoint: '/v1/analysis/{id}',
+      method: "GET",
+      endpoint: "/v1/analysis/{id}",
       parameters: [
-        { name: 'id', type: 'string', required: true, description: 'ID analisis yang ingin diambil' }
+        {
+          name: "id",
+          type: "string",
+          required: true,
+          description: "ID analisis yang ingin diambil",
+        },
       ],
       response: `{
   "success": true,
@@ -145,19 +181,19 @@ fetch('https://api.spreadsheetai.com/v1/analyze', {
     "confidence": 0.95,
     "processing_time": 28
   }
-}`
-    }
-  ]
+}`,
+    },
+  ];
 
   // Mock data untuk panduan
   const guides: GuideItem[] = [
     {
-      id: 'getting-started',
-      title: 'Memulai dengan SpreadsheetAI',
-      description: 'Panduan lengkap untuk memulai menggunakan SpreadsheetAI',
-      category: 'getting-started',
-      readTime: '5 menit',
-      difficulty: 'Pemula',
+      id: "getting-started",
+      title: "Memulai dengan SpreadsheetAI",
+      description: "Panduan lengkap untuk memulai menggunakan SpreadsheetAI",
+      category: "getting-started",
+      readTime: "5 menit",
+      difficulty: "Pemula",
       content: `# Memulai dengan SpreadsheetAI
 
 ## Langkah 1: Daftar Akun
@@ -178,15 +214,15 @@ Daftar akun gratis di SpreadsheetAI untuk mendapatkan akses ke semua fitur dasar
 1. Pilih jenis analisis yang diinginkan
 2. Tulis pertanyaan atau biarkan kosong untuk analisis umum
 3. Klik "Run AI Analysis"
-4. Tunggu hasil analisis`
+4. Tunggu hasil analisis`,
     },
     {
-      id: 'api-integration',
-      title: 'Integrasi API',
-      description: 'Cara mengintegrasikan SpreadsheetAI API ke aplikasi Anda',
-      category: 'integration',
-      readTime: '10 menit',
-      difficulty: 'Menengah',
+      id: "api-integration",
+      title: "Integrasi API",
+      description: "Cara mengintegrasikan SpreadsheetAI API ke aplikasi Anda",
+      category: "integration",
+      readTime: "10 menit",
+      difficulty: "Menengah",
       content: `# Integrasi API SpreadsheetAI
 
 ## Persiapan
@@ -260,15 +296,16 @@ const result = await ai.analyzeFile(file, {
 
 // Ambil hasil
 const analysis = await ai.getAnalysis(result.analysis_id);
-\`\`\``
+\`\`\``,
     },
     {
-      id: 'best-practices',
-      title: 'Best Practices',
-      description: 'Tips dan trik untuk mengoptimalkan penggunaan SpreadsheetAI',
-      category: 'tips',
-      readTime: '8 menit',
-      difficulty: 'Lanjutan',
+      id: "best-practices",
+      title: "Best Practices",
+      description:
+        "Tips dan trik untuk mengoptimalkan penggunaan SpreadsheetAI",
+      category: "tips",
+      readTime: "8 menit",
+      difficulty: "Lanjutan",
       content: `# Best Practices SpreadsheetAI
 
 ## Format File
@@ -312,54 +349,62 @@ try {
     console.log('Analysis failed:', error.message);
   }
 }
-\`\`\``
-    }
-  ]
+\`\`\``,
+    },
+  ];
 
   const categories = [
-    { id: 'all', label: 'Semua', icon: Book },
-    { id: 'getting-started', label: 'Memulai', icon: Play },
-    { id: 'auth', label: 'Autentikasi', icon: Shield },
-    { id: 'analysis', label: 'Analisis', icon: Zap },
-    { id: 'integration', label: 'Integrasi', icon: Globe },
-    { id: 'tips', label: 'Tips & Trik', icon: Database }
-  ]
+    { id: "all", label: "Semua", icon: Book },
+    { id: "getting-started", label: "Memulai", icon: Play },
+    { id: "auth", label: "Autentikasi", icon: Shield },
+    { id: "analysis", label: "Analisis", icon: Zap },
+    { id: "integration", label: "Integrasi", icon: Globe },
+    { id: "tips", label: "Tips & Trik", icon: Database },
+  ];
 
-  const filteredApiDocs = apiDocs.filter(doc => {
-    const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         doc.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = activeCategory === 'all' || doc.category === activeCategory
-    return matchesSearch && matchesCategory
-  })
+  const filteredApiDocs = apiDocs.filter((doc) => {
+    const matchesSearch =
+      doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      activeCategory === "all" || doc.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
 
-  const filteredGuides = guides.filter(guide => {
-    const matchesSearch = guide.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         guide.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = activeCategory === 'all' || guide.category === activeCategory
-    return matchesSearch && matchesCategory
-  })
+  const filteredGuides = guides.filter((guide) => {
+    const matchesSearch =
+      guide.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      guide.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      activeCategory === "all" || guide.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const toggleSection = (sectionId: string) => {
-    setOpenSections(prev => 
-      prev.includes(sectionId) 
-        ? prev.filter(id => id !== sectionId)
-        : [...prev, sectionId]
-    )
-  }
+    setOpenSections((prev) =>
+      prev.includes(sectionId)
+        ? prev.filter((id) => id !== sectionId)
+        : [...prev, sectionId],
+    );
+  };
 
   const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code)
-    toast.success('Kode berhasil disalin!')
-  }
+    navigator.clipboard.writeText(code);
+    toast.success("Kode berhasil disalin!");
+  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'Pemula': return 'bg-green-100 text-green-800'
-      case 'Menengah': return 'bg-yellow-100 text-yellow-800'
-      case 'Lanjutan': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case "Pemula":
+        return "bg-green-100 text-green-800";
+      case "Menengah":
+        return "bg-yellow-100 text-yellow-800";
+      case "Lanjutan":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -385,11 +430,13 @@ try {
           </div>
           <div className="flex gap-2 flex-wrap">
             {categories.map((category) => {
-              const Icon = category.icon
+              const Icon = category.icon;
               return (
                 <Button
                   key={category.id}
-                  variant={activeCategory === category.id ? "default" : "outline"}
+                  variant={
+                    activeCategory === category.id ? "default" : "outline"
+                  }
                   size="sm"
                   onClick={() => setActiveCategory(category.id)}
                   className="flex items-center gap-2"
@@ -397,7 +444,7 @@ try {
                   <Icon className="h-4 w-4" />
                   {category.label}
                 </Button>
-              )
+              );
             })}
           </div>
         </div>
@@ -421,7 +468,9 @@ try {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Tidak ada panduan ditemukan</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  Tidak ada panduan ditemukan
+                </h3>
                 <p className="text-muted-foreground text-center">
                   Coba ubah kata kunci pencarian atau kategori
                 </p>
@@ -431,7 +480,7 @@ try {
             <div className="grid gap-6">
               {filteredGuides.map((guide) => (
                 <Card key={guide.id}>
-                  <Collapsible 
+                  <Collapsible
                     open={openSections.includes(guide.id)}
                     onOpenChange={() => toggleSection(guide.id)}
                   >
@@ -440,13 +489,19 @@ try {
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <CardTitle className="text-xl">{guide.title}</CardTitle>
-                              <Badge className={getDifficultyColor(guide.difficulty)}>
+                              <CardTitle className="text-xl">
+                                {guide.title}
+                              </CardTitle>
+                              <Badge
+                                className={getDifficultyColor(guide.difficulty)}
+                              >
                                 {guide.difficulty}
                               </Badge>
                               <Badge variant="outline">{guide.readTime}</Badge>
                             </div>
-                            <CardDescription>{guide.description}</CardDescription>
+                            <CardDescription>
+                              {guide.description}
+                            </CardDescription>
                           </div>
                           {openSections.includes(guide.id) ? (
                             <ChevronDown className="h-5 w-5" />
@@ -478,7 +533,9 @@ try {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Code className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Tidak ada dokumentasi API ditemukan</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  Tidak ada dokumentasi API ditemukan
+                </h3>
                 <p className="text-muted-foreground text-center">
                   Coba ubah kata kunci pencarian atau kategori
                 </p>
@@ -488,7 +545,7 @@ try {
             <div className="grid gap-6">
               {filteredApiDocs.map((doc) => (
                 <Card key={doc.id}>
-                  <Collapsible 
+                  <Collapsible
                     open={openSections.includes(doc.id)}
                     onOpenChange={() => toggleSection(doc.id)}
                   >
@@ -497,9 +554,17 @@ try {
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <CardTitle className="text-xl">{doc.title}</CardTitle>
+                              <CardTitle className="text-xl">
+                                {doc.title}
+                              </CardTitle>
                               {doc.method && (
-                                <Badge variant={doc.method === 'GET' ? 'secondary' : 'default'}>
+                                <Badge
+                                  variant={
+                                    doc.method === "GET"
+                                      ? "secondary"
+                                      : "default"
+                                  }
+                                >
                                   {doc.method}
                                 </Badge>
                               )}
@@ -529,21 +594,32 @@ try {
                             <h4 className="font-semibold mb-3">Parameter</h4>
                             <div className="space-y-2">
                               {doc.parameters.map((param, index) => (
-                                <div key={index} className="border rounded-lg p-3">
+                                <div
+                                  key={`${doc.id}-param-${index}-${param.name}`}
+                                  className="border rounded-lg p-3"
+                                >
                                   <div className="flex items-center gap-2 mb-1">
                                     <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
                                       {param.name}
                                     </code>
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
                                       {param.type}
                                     </Badge>
                                     {param.required && (
-                                      <Badge variant="destructive" className="text-xs">
+                                      <Badge
+                                        variant="destructive"
+                                        className="text-xs"
+                                      >
                                         Required
                                       </Badge>
                                     )}
                                   </div>
-                                  <p className="text-sm text-muted-foreground">{param.description}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {param.description}
+                                  </p>
                                 </div>
                               ))}
                             </div>
@@ -603,24 +679,30 @@ try {
             <Button variant="outline" className="justify-start h-auto p-4">
               <div className="text-left">
                 <div className="font-semibold">Postman Collection</div>
-                <div className="text-sm text-muted-foreground">Import koleksi API ke Postman</div>
+                <div className="text-sm text-muted-foreground">
+                  Import koleksi API ke Postman
+                </div>
               </div>
             </Button>
             <Button variant="outline" className="justify-start h-auto p-4">
               <div className="text-left">
                 <div className="font-semibold">SDK JavaScript</div>
-                <div className="text-sm text-muted-foreground">Library resmi untuk JavaScript</div>
+                <div className="text-sm text-muted-foreground">
+                  Library resmi untuk JavaScript
+                </div>
               </div>
             </Button>
             <Button variant="outline" className="justify-start h-auto p-4">
               <div className="text-left">
                 <div className="font-semibold">Status Page</div>
-                <div className="text-sm text-muted-foreground">Cek status layanan real-time</div>
+                <div className="text-sm text-muted-foreground">
+                  Cek status layanan real-time
+                </div>
               </div>
             </Button>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

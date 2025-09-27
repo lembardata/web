@@ -1,10 +1,30 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import {
+  Activity,
+  Bell,
+  BookOpen,
+  Brain,
+  ChevronDown,
+  CreditCard,
+  Crown,
+  FileSpreadsheet,
+  HelpCircle,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Search,
+  Settings,
+  Sparkles,
+  User,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,27 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
-import {
-  LayoutDashboard,
-  FileSpreadsheet,
-  Brain,
-  CreditCard,
-  Settings,
-  HelpCircle,
-  BookOpen,
-  Activity,
-  Menu,
-  Bell,
-  Search,
-  Sparkles,
-  LogOut,
-  User,
-  Crown,
-  ChevronDown,
-} from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { toast } from "sonner";
 
 const navigation = [
   {
@@ -102,6 +102,7 @@ export default function DashboardLayout({
       toast.success("Logout berhasil");
       router.push("/");
     } catch (error) {
+      console.log(error);
       toast.error("Gagal logout");
     }
   };
@@ -169,8 +170,8 @@ export default function DashboardLayout({
                     {user.plan === "professional"
                       ? "Professional"
                       : user.plan === "enterprise"
-                      ? "Enterprise"
-                      : "Starter"}
+                        ? "Enterprise"
+                        : "Starter"}
                   </span>
                 </div>
                 {user.plan !== "enterprise" && (
@@ -188,10 +189,8 @@ export default function DashboardLayout({
                 </Link>
               )}
 
-              {user.plan === "professional"  && (
-                <p className="text-xs text-gray-600">
-                 xxxx hari trial tersisa
-                </p>
+              {user.plan === "professional" && (
+                <p className="text-xs text-gray-600">xxxx hari trial tersisa</p>
               )}
             </div>
           </div>
@@ -343,30 +342,21 @@ export default function DashboardLayout({
                   <DropdownMenuSeparator />
 
                   <DropdownMenuItem asChild>
-                    <Link
-                      href="/settings"
-                      className="flex items-center"
-                    >
+                    <Link href="/settings" className="flex items-center">
                       <User className="mr-2 h-4 w-4" />
                       Profile
                     </Link>
                   </DropdownMenuItem>
 
                   <DropdownMenuItem asChild>
-                    <Link
-                      href="/billing"
-                      className="flex items-center"
-                    >
+                    <Link href="/billing" className="flex items-center">
                       <CreditCard className="mr-2 h-4 w-4" />
                       Billing
                     </Link>
                   </DropdownMenuItem>
 
                   <DropdownMenuItem asChild>
-                    <Link
-                      href="/settings"
-                      className="flex items-center"
-                    >
+                    <Link href="/settings" className="flex items-center">
                       <Settings className="mr-2 h-4 w-4" />
                       Settings
                     </Link>

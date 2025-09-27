@@ -1,88 +1,97 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Separator } from "@/components/ui/separator"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import {
-  CreditCard,
-  Download,
-  Calendar,
-  TrendingUp,
   AlertCircle,
+  ArrowUpRight,
+  BarChart3,
+  Calendar,
   CheckCircle,
   Clock,
-  Zap,
+  CreditCard,
   Crown,
-  Star,
-  ArrowUpRight,
+  Database,
+  Download,
   FileText,
   Receipt,
-  Wallet,
-  Target,
-  BarChart3,
-  Users,
-  Database,
+  RefreshCw,
   Shield,
-  Headphones,
-  Sparkles,
-  Gift,
-  RefreshCw
-} from "lucide-react"
-import { toast } from "sonner"
-import { useAuth } from "@/hooks/use-auth"
+  Star,
+  Target,
+  Wallet,
+  Zap,
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Plan {
-  id: string
-  name: string
-  price: number
-  interval: 'month' | 'year'
-  features: string[]
+  id: string;
+  name: string;
+  price: number;
+  interval: "month" | "year";
+  features: string[];
   limits: {
-    queries: number
-    fileSize: number
-    storage: number
-    apiCalls: number
-  }
-  popular?: boolean
-  current?: boolean
+    queries: number;
+    fileSize: number;
+    storage: number;
+    apiCalls: number;
+  };
+  popular?: boolean;
+  current?: boolean;
 }
 
 interface Usage {
-  queries: { used: number; limit: number }
-  fileSize: { used: number; limit: number }
-  storage: { used: number; limit: number }
-  apiCalls: { used: number; limit: number }
+  queries: { used: number; limit: number };
+  fileSize: { used: number; limit: number };
+  storage: { used: number; limit: number };
+  apiCalls: { used: number; limit: number };
 }
 
 interface Invoice {
-  id: string
-  date: string
-  amount: number
-  status: 'paid' | 'pending' | 'failed'
-  plan: string
-  period: string
-  downloadUrl?: string
+  id: string;
+  date: string;
+  amount: number;
+  status: "paid" | "pending" | "failed";
+  plan: string;
+  period: string;
+  downloadUrl?: string;
 }
 
 interface PaymentMethod {
-  id: string
-  type: 'card' | 'bank'
-  last4: string
-  brand: string
-  expiryMonth: number
-  expiryYear: number
-  isDefault: boolean
+  id: string;
+  type: "card" | "bank";
+  last4: string;
+  brand: string;
+  expiryMonth: number;
+  expiryYear: number;
+  isDefault: boolean;
 }
 
 export default function BillingPage() {
-  const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState("overview")
-  const [isLoading, setIsLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState("overview");
+  const [isLoading, setIsLoading] = useState(false);
 
   // Mock current plan and usage
   const currentPlan: Plan = {
@@ -96,23 +105,23 @@ export default function BillingPage() {
       "10GB Storage",
       "Priority Support",
       "Advanced Analytics",
-      "API Access"
+      "API Access",
     ],
     limits: {
       queries: 500,
       fileSize: 50,
       storage: 10240,
-      apiCalls: 10000
+      apiCalls: 10000,
     },
-    current: true
-  }
+    current: true,
+  };
 
   const usage: Usage = {
     queries: { used: 287, limit: 500 },
     fileSize: { used: 32, limit: 50 },
     storage: { used: 6.8, limit: 10 },
-    apiCalls: { used: 7234, limit: 10000 }
-  }
+    apiCalls: { used: 7234, limit: 10000 },
+  };
 
   // Available plans
   const plans: Plan[] = [
@@ -126,14 +135,14 @@ export default function BillingPage() {
         "File upload hingga 5MB",
         "1GB Storage",
         "Email Support",
-        "Basic Analytics"
+        "Basic Analytics",
       ],
       limits: {
         queries: 50,
         fileSize: 5,
         storage: 1024,
-        apiCalls: 1000
-      }
+        apiCalls: 1000,
+      },
     },
     {
       id: "pro",
@@ -146,16 +155,16 @@ export default function BillingPage() {
         "10GB Storage",
         "Priority Support",
         "Advanced Analytics",
-        "API Access"
+        "API Access",
       ],
       limits: {
         queries: 500,
         fileSize: 50,
         storage: 10240,
-        apiCalls: 10000
+        apiCalls: 10000,
       },
       popular: true,
-      current: true
+      current: true,
     },
     {
       id: "enterprise",
@@ -170,16 +179,16 @@ export default function BillingPage() {
         "Custom Analytics",
         "Full API Access",
         "White-label Solution",
-        "Dedicated Account Manager"
+        "Dedicated Account Manager",
       ],
       limits: {
         queries: -1, // unlimited
         fileSize: 500,
         storage: 102400,
-        apiCalls: -1 // unlimited
-      }
-    }
-  ]
+        apiCalls: -1, // unlimited
+      },
+    },
+  ];
 
   // Mock invoices
   const invoices: Invoice[] = [
@@ -190,7 +199,7 @@ export default function BillingPage() {
       status: "paid",
       plan: "Pro Plan",
       period: "Jan 2024 - Feb 2024",
-      downloadUrl: "/invoices/inv-2024-001.pdf"
+      downloadUrl: "/invoices/inv-2024-001.pdf",
     },
     {
       id: "inv-2023-012",
@@ -199,7 +208,7 @@ export default function BillingPage() {
       status: "paid",
       plan: "Pro Plan",
       period: "Dec 2023 - Jan 2024",
-      downloadUrl: "/invoices/inv-2023-012.pdf"
+      downloadUrl: "/invoices/inv-2023-012.pdf",
     },
     {
       id: "inv-2023-011",
@@ -208,9 +217,9 @@ export default function BillingPage() {
       status: "paid",
       plan: "Pro Plan",
       period: "Nov 2023 - Dec 2023",
-      downloadUrl: "/invoices/inv-2023-011.pdf"
-    }
-  ]
+      downloadUrl: "/invoices/inv-2023-011.pdf",
+    },
+  ];
 
   // Mock payment methods
   const paymentMethods: PaymentMethod[] = [
@@ -221,7 +230,7 @@ export default function BillingPage() {
       brand: "Visa",
       expiryMonth: 12,
       expiryYear: 2025,
-      isDefault: true
+      isDefault: true,
     },
     {
       id: "pm-2",
@@ -230,84 +239,86 @@ export default function BillingPage() {
       brand: "Mastercard",
       expiryMonth: 8,
       expiryYear: 2026,
-      isDefault: false
-    }
-  ]
+      isDefault: false,
+    },
+  ];
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(amount)
-  }
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
   const getUsagePercentage = (used: number, limit: number) => {
-    if (limit === -1) return 0 // unlimited
-    return Math.min((used / limit) * 100, 100)
-  }
+    if (limit === -1) return 0; // unlimited
+    return Math.min((used / limit) * 100, 100);
+  };
 
   const getUsageColor = (percentage: number) => {
-    if (percentage >= 90) return "text-red-600"
-    if (percentage >= 75) return "text-yellow-600"
-    return "text-green-600"
-  }
+    if (percentage >= 90) return "text-red-600";
+    if (percentage >= 75) return "text-yellow-600";
+    return "text-green-600";
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'paid':
-        return <CheckCircle className="h-4 w-4 text-green-600" />
-      case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-600" />
-      case 'failed':
-        return <AlertCircle className="h-4 w-4 text-red-600" />
+      case "paid":
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case "pending":
+        return <Clock className="h-4 w-4 text-yellow-600" />;
+      case "failed":
+        return <AlertCircle className="h-4 w-4 text-red-600" />;
       default:
-        return <AlertCircle className="h-4 w-4 text-gray-600" />
+        return <AlertCircle className="h-4 w-4 text-gray-600" />;
     }
-  }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'paid':
-        return 'bg-green-100 text-green-800'
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'failed':
-        return 'bg-red-100 text-red-800'
+      case "paid":
+        return "bg-green-100 text-green-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "failed":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800'
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const handleUpgradePlan = async (planId: string) => {
-    setIsLoading(true)
+    setIsLoading(true);
     // Simulate API call
     setTimeout(() => {
-      setIsLoading(false)
-      toast.success(`Berhasil upgrade ke ${plans.find(p => p.id === planId)?.name} Plan!`)
-    }, 2000)
-  }
+      setIsLoading(false);
+      toast.success(
+        `Berhasil upgrade ke ${plans.find((p) => p.id === planId)?.name} Plan!`,
+      );
+    }, 2000);
+  };
 
   const handleDownloadInvoice = (invoice: Invoice) => {
     // Simulate download
-    toast.success(`Mengunduh invoice ${invoice.id}`)
-  }
+    toast.success(`Mengunduh invoice ${invoice.id}`);
+  };
 
   const handleAddPaymentMethod = () => {
-    toast.success("Redirecting to payment method setup...")
-  }
+    toast.success("Redirecting to payment method setup...");
+  };
 
   const handleCancelSubscription = () => {
-    toast.success("Subscription cancellation request submitted")
-  }
+    toast.success("Subscription cancellation request submitted");
+  };
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -341,9 +352,12 @@ export default function BillingPage() {
             <div className="flex items-center gap-3">
               <Crown className="h-6 w-6 text-primary" />
               <div>
-                <CardTitle className="text-xl">{currentPlan.name} Plan</CardTitle>
+                <CardTitle className="text-xl">
+                  {currentPlan.name} Plan
+                </CardTitle>
                 <CardDescription>
-                  {formatCurrency(currentPlan.price)}/{currentPlan.interval === 'month' ? 'bulan' : 'tahun'}
+                  {formatCurrency(currentPlan.price)}/
+                  {currentPlan.interval === "month" ? "bulan" : "tahun"}
                 </CardDescription>
               </div>
             </div>
@@ -360,61 +374,100 @@ export default function BillingPage() {
                   <Target className="h-4 w-4" />
                   AI Queries
                 </span>
-                <span className={getUsageColor(getUsagePercentage(usage.queries.used, usage.queries.limit))}>
-                  {usage.queries.used}/{usage.queries.limit === -1 ? '∞' : usage.queries.limit}
+                <span
+                  className={getUsageColor(
+                    getUsagePercentage(usage.queries.used, usage.queries.limit),
+                  )}
+                >
+                  {usage.queries.used}/
+                  {usage.queries.limit === -1 ? "∞" : usage.queries.limit}
                 </span>
               </div>
-              <Progress 
-                value={getUsagePercentage(usage.queries.used, usage.queries.limit)} 
-                className="h-2" 
+              <Progress
+                value={getUsagePercentage(
+                  usage.queries.used,
+                  usage.queries.limit,
+                )}
+                className="h-2"
               />
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-1">
                   <FileText className="h-4 w-4" />
                   File Size
                 </span>
-                <span className={getUsageColor(getUsagePercentage(usage.fileSize.used, usage.fileSize.limit))}>
+                <span
+                  className={getUsageColor(
+                    getUsagePercentage(
+                      usage.fileSize.used,
+                      usage.fileSize.limit,
+                    ),
+                  )}
+                >
                   {usage.fileSize.used}/{usage.fileSize.limit}MB
                 </span>
               </div>
-              <Progress 
-                value={getUsagePercentage(usage.fileSize.used, usage.fileSize.limit)} 
-                className="h-2" 
+              <Progress
+                value={getUsagePercentage(
+                  usage.fileSize.used,
+                  usage.fileSize.limit,
+                )}
+                className="h-2"
               />
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-1">
                   <Database className="h-4 w-4" />
                   Storage
                 </span>
-                <span className={getUsageColor(getUsagePercentage(usage.storage.used * 1024, usage.storage.limit))}>
+                <span
+                  className={getUsageColor(
+                    getUsagePercentage(
+                      usage.storage.used * 1024,
+                      usage.storage.limit,
+                    ),
+                  )}
+                >
                   {usage.storage.used}/{usage.storage.limit}GB
                 </span>
               </div>
-              <Progress 
-                value={getUsagePercentage(usage.storage.used * 1024, usage.storage.limit)} 
-                className="h-2" 
+              <Progress
+                value={getUsagePercentage(
+                  usage.storage.used * 1024,
+                  usage.storage.limit,
+                )}
+                className="h-2"
               />
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-1">
                   <Zap className="h-4 w-4" />
                   API Calls
                 </span>
-                <span className={getUsageColor(getUsagePercentage(usage.apiCalls.used, usage.apiCalls.limit))}>
-                  {usage.apiCalls.used}/{usage.apiCalls.limit === -1 ? '∞' : usage.apiCalls.limit}
+                <span
+                  className={getUsageColor(
+                    getUsagePercentage(
+                      usage.apiCalls.used,
+                      usage.apiCalls.limit,
+                    ),
+                  )}
+                >
+                  {usage.apiCalls.used}/
+                  {usage.apiCalls.limit === -1 ? "∞" : usage.apiCalls.limit}
                 </span>
               </div>
-              <Progress 
-                value={getUsagePercentage(usage.apiCalls.used, usage.apiCalls.limit)} 
-                className="h-2" 
+              <Progress
+                value={getUsagePercentage(
+                  usage.apiCalls.used,
+                  usage.apiCalls.limit,
+                )}
+                className="h-2"
               />
             </div>
           </div>
@@ -451,17 +504,27 @@ export default function BillingPage() {
                       {usage.queries.used} of {usage.queries.limit} used
                     </span>
                   </div>
-                  <Progress value={getUsagePercentage(usage.queries.used, usage.queries.limit)} />
-                  
+                  <Progress
+                    value={getUsagePercentage(
+                      usage.queries.used,
+                      usage.queries.limit,
+                    )}
+                  />
+
                   <div className="flex items-center justify-between">
                     <h4 className="font-semibold">Storage</h4>
                     <span className="text-sm text-muted-foreground">
                       {usage.storage.used}GB of {usage.storage.limit}GB used
                     </span>
                   </div>
-                  <Progress value={getUsagePercentage(usage.storage.used * 1024, usage.storage.limit)} />
+                  <Progress
+                    value={getUsagePercentage(
+                      usage.storage.used * 1024,
+                      usage.storage.limit,
+                    )}
+                  />
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="font-semibold">File Upload Size</h4>
@@ -469,15 +532,27 @@ export default function BillingPage() {
                       Max {usage.fileSize.limit}MB per file
                     </span>
                   </div>
-                  <Progress value={getUsagePercentage(usage.fileSize.used, usage.fileSize.limit)} />
-                  
+                  <Progress
+                    value={getUsagePercentage(
+                      usage.fileSize.used,
+                      usage.fileSize.limit,
+                    )}
+                  />
+
                   <div className="flex items-center justify-between">
                     <h4 className="font-semibold">API Calls</h4>
                     <span className="text-sm text-muted-foreground">
-                      {usage.apiCalls.used} of {usage.apiCalls.limit === -1 ? '∞' : usage.apiCalls.limit} used
+                      {usage.apiCalls.used} of{" "}
+                      {usage.apiCalls.limit === -1 ? "∞" : usage.apiCalls.limit}{" "}
+                      used
                     </span>
                   </div>
-                  <Progress value={getUsagePercentage(usage.apiCalls.used, usage.apiCalls.limit)} />
+                  <Progress
+                    value={getUsagePercentage(
+                      usage.apiCalls.used,
+                      usage.apiCalls.limit,
+                    )}
+                  />
                 </div>
               </div>
             </CardContent>
@@ -494,8 +569,12 @@ export default function BillingPage() {
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-semibold">Next billing date: February 1, 2024</p>
-                  <p className="text-muted-foreground">Amount: {formatCurrency(currentPlan.price)}</p>
+                  <p className="font-semibold">
+                    Next billing date: February 1, 2024
+                  </p>
+                  <p className="text-muted-foreground">
+                    Amount: {formatCurrency(currentPlan.price)}
+                  </p>
                 </div>
                 <Button variant="outline">
                   <RefreshCw className="h-4 w-4 mr-2" />
@@ -510,7 +589,10 @@ export default function BillingPage() {
         <TabsContent value="plans" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {plans.map((plan) => (
-              <Card key={plan.id} className={`relative ${plan.popular ? 'border-primary shadow-lg' : ''} ${plan.current ? 'bg-muted/50' : ''}`}>
+              <Card
+                key={plan.id}
+                className={`relative ${plan.popular ? "border-primary shadow-lg" : ""} ${plan.current ? "bg-muted/50" : ""}`}
+              >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                     <Badge className="bg-primary text-primary-foreground">
@@ -519,56 +601,61 @@ export default function BillingPage() {
                     </Badge>
                   </div>
                 )}
-                
+
                 <CardHeader className="text-center">
                   <CardTitle className="text-xl">{plan.name}</CardTitle>
                   <div className="space-y-2">
                     <div className="text-3xl font-bold">
-                      {plan.price === 0 ? 'Free' : formatCurrency(plan.price)}
+                      {plan.price === 0 ? "Free" : formatCurrency(plan.price)}
                     </div>
                     {plan.price > 0 && (
-                      <p className="text-muted-foreground">per {plan.interval === 'month' ? 'bulan' : 'tahun'}</p>
+                      <p className="text-muted-foreground">
+                        per {plan.interval === "month" ? "bulan" : "tahun"}
+                      </p>
                     )}
                   </div>
                 </CardHeader>
-                
+
                 <CardContent className="space-y-4">
                   <ul className="space-y-2">
                     {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-2">
+                      <li
+                        key={`${plan.id}-${index}-${feature}`}
+                        className="flex items-start gap-2"
+                      >
                         <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                         <span className="text-sm">{feature}</span>
                       </li>
                     ))}
                   </ul>
-                  
+
                   <Separator />
-                  
+
                   {plan.current ? (
                     <Button disabled className="w-full">
                       <CheckCircle className="h-4 w-4 mr-2" />
                       Current Plan
                     </Button>
                   ) : (
-                    <Button 
+                    <Button
                       onClick={() => handleUpgradePlan(plan.id)}
                       disabled={isLoading}
                       className="w-full"
-                      variant={plan.popular ? 'default' : 'outline'}
+                      variant={plan.popular ? "default" : "outline"}
                     >
                       {isLoading ? (
                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                       ) : (
                         <ArrowUpRight className="h-4 w-4 mr-2" />
                       )}
-                      {plan.price === 0 ? 'Downgrade' : 'Upgrade'}
+                      {plan.price === 0 ? "Downgrade" : "Upgrade"}
                     </Button>
                   )}
                 </CardContent>
               </Card>
             ))}
           </div>
-          
+
           {/* Plan Comparison */}
           <Card>
             <CardHeader>
@@ -583,23 +670,27 @@ export default function BillingPage() {
                   <thead>
                     <tr className="border-b">
                       <th className="text-left p-2">Feature</th>
-                      {plans.map(plan => (
-                        <th key={plan.id} className="text-center p-2">{plan.name}</th>
+                      {plans.map((plan) => (
+                        <th key={plan.id} className="text-center p-2">
+                          {plan.name}
+                        </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     <tr className="border-b">
                       <td className="p-2 font-medium">AI Queries</td>
-                      {plans.map(plan => (
+                      {plans.map((plan) => (
                         <td key={plan.id} className="text-center p-2">
-                          {plan.limits.queries === -1 ? 'Unlimited' : plan.limits.queries}
+                          {plan.limits.queries === -1
+                            ? "Unlimited"
+                            : plan.limits.queries}
                         </td>
                       ))}
                     </tr>
                     <tr className="border-b">
                       <td className="p-2 font-medium">File Size</td>
-                      {plans.map(plan => (
+                      {plans.map((plan) => (
                         <td key={plan.id} className="text-center p-2">
                           {plan.limits.fileSize}MB
                         </td>
@@ -607,7 +698,7 @@ export default function BillingPage() {
                     </tr>
                     <tr className="border-b">
                       <td className="p-2 font-medium">Storage</td>
-                      {plans.map(plan => (
+                      {plans.map((plan) => (
                         <td key={plan.id} className="text-center p-2">
                           {plan.limits.storage / 1024}GB
                         </td>
@@ -615,9 +706,11 @@ export default function BillingPage() {
                     </tr>
                     <tr className="border-b">
                       <td className="p-2 font-medium">API Calls</td>
-                      {plans.map(plan => (
+                      {plans.map((plan) => (
                         <td key={plan.id} className="text-center p-2">
-                          {plan.limits.apiCalls === -1 ? 'Unlimited' : plan.limits.apiCalls}
+                          {plan.limits.apiCalls === -1
+                            ? "Unlimited"
+                            : plan.limits.apiCalls}
                         </td>
                       ))}
                     </tr>
@@ -643,7 +736,10 @@ export default function BillingPage() {
             <CardContent>
               <div className="space-y-4">
                 {invoices.map((invoice) => (
-                  <div key={invoice.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div
+                    key={invoice.id}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
                         {getStatusIcon(invoice.status)}
@@ -658,16 +754,20 @@ export default function BillingPage() {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <p className="font-semibold">{formatCurrency(invoice.amount)}</p>
-                        <p className="text-sm text-muted-foreground">{formatDate(invoice.date)}</p>
+                        <p className="font-semibold">
+                          {formatCurrency(invoice.amount)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDate(invoice.date)}
+                        </p>
                       </div>
-                      
-                      {invoice.status === 'paid' && (
-                        <Button 
-                          variant="outline" 
+
+                      {invoice.status === "paid" && (
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => handleDownloadInvoice(invoice)}
                         >
@@ -698,7 +798,10 @@ export default function BillingPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {paymentMethods.map((method) => (
-                <div key={method.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div
+                  key={method.id}
+                  className="flex items-center justify-between p-4 border rounded-lg"
+                >
                   <div className="flex items-center gap-4">
                     <CreditCard className="h-8 w-8 text-muted-foreground" />
                     <div>
@@ -706,11 +809,12 @@ export default function BillingPage() {
                         {method.brand} •••• {method.last4}
                       </h4>
                       <p className="text-sm text-muted-foreground">
-                        Expires {method.expiryMonth.toString().padStart(2, '0')}/{method.expiryYear}
+                        Expires {method.expiryMonth.toString().padStart(2, "0")}
+                        /{method.expiryYear}
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     {method.isDefault && (
                       <Badge variant="secondary">Default</Badge>
@@ -724,8 +828,12 @@ export default function BillingPage() {
                   </div>
                 </div>
               ))}
-              
-              <Button onClick={handleAddPaymentMethod} className="w-full" variant="outline">
+
+              <Button
+                onClick={handleAddPaymentMethod}
+                className="w-full"
+                variant="outline"
+              >
                 <CreditCard className="h-4 w-4 mr-2" />
                 Add Payment Method
               </Button>
@@ -745,41 +853,41 @@ export default function BillingPage() {
                 <div>
                   <h4 className="font-semibold">Current Subscription</h4>
                   <p className="text-muted-foreground">
-                    {currentPlan.name} Plan - {formatCurrency(currentPlan.price)}/month
+                    {currentPlan.name} Plan -{" "}
+                    {formatCurrency(currentPlan.price)}/month
                   </p>
                 </div>
                 <Button variant="outline" onClick={() => setActiveTab("plans")}>
                   Change Plan
                 </Button>
               </div>
-              
+
               <div className="flex items-center justify-between p-4 border rounded-lg">
                 <div>
                   <h4 className="font-semibold">Auto-renewal</h4>
                   <p className="text-muted-foreground">
-                    Your subscription will automatically renew on February 1, 2024
+                    Your subscription will automatically renew on February 1,
+                    2024
                   </p>
                 </div>
-                <Button variant="outline">
-                  Manage
-                </Button>
+                <Button variant="outline">Manage</Button>
               </div>
-              
+
               <Separator />
-              
+
               <div className="space-y-4">
                 <h4 className="font-semibold text-red-600">Danger Zone</h4>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive">
-                      Cancel Subscription
-                    </Button>
+                    <Button variant="destructive">Cancel Subscription</Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Cancel Subscription</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to cancel your subscription? You will lose access to Pro features at the end of your current billing period.
+                        Are you sure you want to cancel your subscription? You
+                        will lose access to Pro features at the end of your
+                        current billing period.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -796,5 +904,5 @@ export default function BillingPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

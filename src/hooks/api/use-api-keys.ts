@@ -41,7 +41,9 @@ export function useAPIKeys() {
   return useQuery({
     queryKey: ["api-keys"],
     queryFn: async (): Promise<Omit<APIKey, "key">[]> => {
-      const response = await apiClient.get<ListAPIKeysResponse>("/api/v1/user/api-keys");
+      const response = await apiClient.get<ListAPIKeysResponse>(
+        "/api/v1/user/api-keys",
+      );
       return response.data.api_keys;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes

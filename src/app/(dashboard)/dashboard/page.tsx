@@ -1,6 +1,25 @@
 "use client";
 
+import {
+  AlertCircle,
+  ArrowRight,
+  BarChart3,
+  Bot,
+  Brain,
+  CheckCircle,
+  Database,
+  FileSpreadsheet,
+  Plus,
+  TrendingUp,
+  Upload,
+  Users,
+  XCircle,
+  Zap,
+} from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,27 +28,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Bot,
-  FileSpreadsheet,
-  TrendingUp,
-  Users,
-  Plus,
-  ArrowRight,
-  Zap,
-  Clock,
-  Brain,
-  Upload,
-  BarChart3,
-  Database,
-  CheckCircle,
-  AlertCircle,
-  XCircle,
-} from "lucide-react";
-
-import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 
 // Mock data - replace with real data from API
@@ -100,36 +98,36 @@ const getStatusBadge = (status: string) => {
   }
 };
 
-const recentActivities = [
-  {
-    id: 1,
-    type: "ai_query",
-    title: "Formula optimization untuk Sales Report",
-    time: "2 menit yang lalu",
-    status: "completed",
-  },
-  {
-    id: 2,
-    type: "spreadsheet",
-    title: "Membuat spreadsheet Budget 2024",
-    time: "15 menit yang lalu",
-    status: "completed",
-  },
-  {
-    id: 3,
-    type: "ai_query",
-    title: "Analisis data customer behavior",
-    time: "1 jam yang lalu",
-    status: "completed",
-  },
-  {
-    id: 4,
-    type: "spreadsheet",
-    title: "Update Inventory Management",
-    time: "3 jam yang lalu",
-    status: "completed",
-  },
-];
+// const recentActivities = [
+//   {
+//     id: 1,
+//     type: "ai_query",
+//     title: "Formula optimization untuk Sales Report",
+//     time: "2 menit yang lalu",
+//     status: "completed",
+//   },
+//   {
+//     id: 2,
+//     type: "spreadsheet",
+//     title: "Membuat spreadsheet Budget 2024",
+//     time: "15 menit yang lalu",
+//     status: "completed",
+//   },
+//   {
+//     id: 3,
+//     type: "ai_query",
+//     title: "Analisis data customer behavior",
+//     time: "1 jam yang lalu",
+//     status: "completed",
+//   },
+//   {
+//     id: 4,
+//     type: "spreadsheet",
+//     title: "Update Inventory Management",
+//     time: "3 jam yang lalu",
+//     status: "completed",
+//   },
+// ];
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -279,9 +277,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Aksi Cepat</CardTitle>
-            <CardDescription>
-              Akses fitur utama dengan cepat
-            </CardDescription>
+            <CardDescription>Akses fitur utama dengan cepat</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
@@ -337,21 +333,30 @@ export default function DashboardPage() {
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span>AI Queries</span>
-                <span>{mockStats.planUsage.queries.used}/{mockStats.planUsage.queries.limit}</span>
+                <span>
+                  {mockStats.planUsage.queries.used}/
+                  {mockStats.planUsage.queries.limit}
+                </span>
               </div>
               <Progress value={mockStats.planUsage.queries.percentage} />
             </div>
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span>Storage</span>
-                <span>{mockStats.planUsage.storage.used} GB / {mockStats.planUsage.storage.limit} GB</span>
+                <span>
+                  {mockStats.planUsage.storage.used} GB /{" "}
+                  {mockStats.planUsage.storage.limit} GB
+                </span>
               </div>
               <Progress value={mockStats.planUsage.storage.percentage} />
             </div>
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span>Spreadsheets</span>
-                <span>{mockStats.planUsage.spreadsheets.used}/{mockStats.planUsage.spreadsheets.limit}</span>
+                <span>
+                  {mockStats.planUsage.spreadsheets.used}/
+                  {mockStats.planUsage.spreadsheets.limit}
+                </span>
               </div>
               <Progress value={mockStats.planUsage.spreadsheets.percentage} />
             </div>
@@ -410,4 +415,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-      

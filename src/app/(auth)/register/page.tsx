@@ -1,119 +1,143 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Eye, 
-  EyeOff, 
-  Mail, 
-  Lock, 
-  User, 
-  Building, 
-  Sparkles, 
-  ArrowLeft, 
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
   AlertCircle,
+  ArrowLeft,
+  Building,
   Check,
   Crown,
-  Zap
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { signIn } from 'next-auth/react';
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  Sparkles,
+  User,
+  Zap,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as z from "zod";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
-const registerSchema = z.object({
-  firstName: z
-    .string()
-    .min(1, 'Nama depan wajib diisi')
-    .min(2, 'Nama depan minimal 2 karakter'),
-  lastName: z
-    .string()
-    .min(1, 'Nama belakang wajib diisi')
-    .min(2, 'Nama belakang minimal 2 karakter'),
-  email: z
-    .string()
-    .min(1, 'Email wajib diisi')
-    .email('Format email tidak valid'),
-  password: z
-    .string()
-    .min(1, 'Password wajib diisi')
-    .min(8, 'Password minimal 8 karakter')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password harus mengandung huruf besar, huruf kecil, dan angka'),
-  confirmPassword: z
-    .string()
-    .min(1, 'Konfirmasi password wajib diisi'),
-  company: z
-    .string()
-    .optional(),
-  jobTitle: z
-    .string()
-    .optional(),
-  plan: z
-    .enum(['starter', 'professional', 'enterprise'])
-    .default('starter'),
-  agreeToTerms: z
-    .boolean()
-    .refine(val => val === true, 'Anda harus menyetujui syarat dan ketentuan'),
-  subscribeNewsletter: z
-    .boolean()
-    .default(false),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Password dan konfirmasi password tidak cocok',
-  path: ['confirmPassword'],
-});
+const registerSchema = z
+  .object({
+    firstName: z
+      .string()
+      .min(1, "Nama depan wajib diisi")
+      .min(2, "Nama depan minimal 2 karakter"),
+    lastName: z
+      .string()
+      .min(1, "Nama belakang wajib diisi")
+      .min(2, "Nama belakang minimal 2 karakter"),
+    email: z
+      .string()
+      .min(1, "Email wajib diisi")
+      .email("Format email tidak valid"),
+    password: z
+      .string()
+      .min(1, "Password wajib diisi")
+      .min(8, "Password minimal 8 karakter")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        "Password harus mengandung huruf besar, huruf kecil, dan angka",
+      ),
+    confirmPassword: z.string().min(1, "Konfirmasi password wajib diisi"),
+    company: z.string().optional(),
+    jobTitle: z.string().optional(),
+    plan: z.enum(["starter", "professional", "enterprise"]).default("starter"),
+    agreeToTerms: z
+      .boolean()
+      .refine(
+        (val) => val === true,
+        "Anda harus menyetujui syarat dan ketentuan",
+      ),
+    subscribeNewsletter: z.boolean().default(false),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Password dan konfirmasi password tidak cocok",
+    path: ["confirmPassword"],
+  });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 const plans = [
   {
-    id: 'starter',
-    name: 'Starter',
-    price: 'Gratis',
+    id: "starter",
+    name: "Starter",
+    price: "Gratis",
     icon: User,
-    features: ['10 AI queries/bulan', '5 spreadsheet uploads', 'Basic analytics'],
+    features: [
+      "10 AI queries/bulan",
+      "5 spreadsheet uploads",
+      "Basic analytics",
+    ],
     popular: false,
   },
   {
-    id: 'professional',
-    name: 'Professional',
-    price: 'Rp 299.000/bulan',
+    id: "professional",
+    name: "Professional",
+    price: "Rp 299.000/bulan",
     icon: Crown,
-    features: ['500 AI queries/bulan', 'Unlimited uploads', 'Advanced analytics', 'Priority support'],
+    features: [
+      "500 AI queries/bulan",
+      "Unlimited uploads",
+      "Advanced analytics",
+      "Priority support",
+    ],
     popular: true,
   },
   {
-    id: 'enterprise',
-    name: 'Enterprise',
-    price: 'Custom',
+    id: "enterprise",
+    name: "Enterprise",
+    price: "Custom",
     icon: Building,
-    features: ['Unlimited queries', 'Custom AI models', 'Dedicated support', 'On-premise'],
+    features: [
+      "Unlimited queries",
+      "Custom AI models",
+      "Dedicated support",
+      "On-premise",
+    ],
     popular: false,
   },
 ];
 
 const jobTitles = [
-  'Data Analyst',
-  'Business Analyst',
-  'Financial Analyst',
-  'Marketing Manager',
-  'Operations Manager',
-  'CEO/Founder',
-  'CTO/CIO',
-  'Product Manager',
-  'Consultant',
-  'Researcher',
-  'Student',
-  'Other',
+  "Data Analyst",
+  "Business Analyst",
+  "Financial Analyst",
+  "Marketing Manager",
+  "Operations Manager",
+  "CEO/Founder",
+  "CTO/CIO",
+  "Product Manager",
+  "Consultant",
+  "Researcher",
+  "Student",
+  "Other",
 ];
 
 export default function RegisterPage() {
@@ -121,8 +145,8 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState('starter');
-  
+  const [selectedPlan, setSelectedPlan] = useState("starter");
+
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -135,26 +159,26 @@ export default function RegisterPage() {
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-      company: '',
-      jobTitle: '',
-      plan: (searchParams.get('plan') as any) || 'starter',
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      company: "",
+      jobTitle: "",
+      plan: (searchParams.get("plan") as any) || "starter",
       agreeToTerms: false,
       subscribeNewsletter: true,
     },
   });
 
-  const watchedFields = watch(['agreeToTerms', 'subscribeNewsletter', 'plan']);
+  const watchedFields = watch(["agreeToTerms", "subscribeNewsletter", "plan"]);
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
 
     try {
-      const result = await signIn('credentials', {
+      const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
         firstName: data.firstName,
@@ -163,29 +187,32 @@ export default function RegisterPage() {
         jobTitle: data.jobTitle,
         plan: data.plan,
         subscribeNewsletter: data.subscribeNewsletter,
-        isRegister: 'true',
+        isRegister: "true",
         redirect: false,
       });
 
       if (result?.error) {
-        toast.error(result.error === 'CredentialsSignin' 
-          ? 'Email sudah terdaftar atau data tidak valid' 
-          : 'Registrasi gagal. Silakan coba lagi.');
+        toast.error(
+          result.error === "CredentialsSignin"
+            ? "Email sudah terdaftar atau data tidak valid"
+            : "Registrasi gagal. Silakan coba lagi.",
+        );
         return;
       }
 
-      toast.success('Registrasi berhasil! Selamat datang di SpreadsheetAI.');
-      
+      toast.success("Registrasi berhasil! Selamat datang di SpreadsheetAI.");
+
       // Redirect based on selected plan
-      if (data.plan === 'professional') {
-        router.push('/dashboard?welcome=true&trial=true');
-      } else if (data.plan === 'enterprise') {
-        router.push('/contact?type=enterprise');
+      if (data.plan === "professional") {
+        router.push("/dashboard?welcome=true&trial=true");
+      } else if (data.plan === "enterprise") {
+        router.push("/contact?type=enterprise");
       } else {
-        router.push('/dashboard?welcome=true');
+        router.push("/dashboard?welcome=true");
       }
     } catch (error: any) {
-      toast.error('Registrasi gagal. Silakan coba lagi.');
+      console.error("Register error:", error);
+      toast.error("Registrasi gagal. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
     }
@@ -193,19 +220,20 @@ export default function RegisterPage() {
 
   const handleGoogleRegister = async () => {
     setIsGoogleLoading(true);
-    
+
     try {
-      const result = await signIn('google', {
-        callbackUrl: selectedPlan === 'professional' 
-          ? '/dashboard?welcome=true&trial=true'
-          : selectedPlan === 'enterprise'
-          ? '/contact?type=enterprise'
-          : '/dashboard?welcome=true',
+      const result = await signIn("google", {
+        callbackUrl:
+          selectedPlan === "professional"
+            ? "/dashboard?welcome=true&trial=true"
+            : selectedPlan === "enterprise"
+              ? "/contact?type=enterprise"
+              : "/dashboard?welcome=true",
         redirect: false,
       });
 
       if (result?.error) {
-        toast.error('Google register gagal. Silakan coba lagi.');
+        toast.error("Google register gagal. Silakan coba lagi.");
         return;
       }
 
@@ -213,7 +241,7 @@ export default function RegisterPage() {
         window.location.href = result.url;
       }
     } catch (error) {
-      toast.error('Google register gagal. Silakan coba lagi.');
+      toast.error("Google register gagal. Silakan coba lagi.");
     } finally {
       setIsGoogleLoading(false);
     }
@@ -221,7 +249,7 @@ export default function RegisterPage() {
 
   const handlePlanSelect = (planId: string) => {
     setSelectedPlan(planId);
-    setValue('plan', planId as any);
+    setValue("plan", planId as any);
   };
 
   return (
@@ -229,8 +257,8 @@ export default function RegisterPage() {
       <div className="max-w-2xl mx-auto">
         {/* Back to Home */}
         <div className="mb-6">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -244,7 +272,9 @@ export default function RegisterPage() {
             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
               <Sparkles className="h-6 w-6 text-white" />
             </div>
-            <span className="text-2xl font-bold text-gray-900">SpreadsheetAI</span>
+            <span className="text-2xl font-bold text-gray-900">
+              SpreadsheetAI
+            </span>
           </Link>
         </div>
 
@@ -252,27 +282,30 @@ export default function RegisterPage() {
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold">Buat Akun Baru</CardTitle>
             <CardDescription>
-              Bergabunglah dengan ribuan profesional yang menggunakan AI untuk analisis data
+              Bergabunglah dengan ribuan profesional yang menggunakan AI untuk
+              analisis data
             </CardDescription>
           </CardHeader>
 
           <CardContent>
             {/* Plan Selection */}
             <div className="mb-8">
-              <Label className="text-base font-medium mb-4 block">Pilih Paket</Label>
+              <Label className="text-base font-medium mb-4 block">
+                Pilih Paket
+              </Label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {plans.map((plan) => {
                   const Icon = plan.icon;
                   const isSelected = selectedPlan === plan.id;
-                  
+
                   return (
                     <div
                       key={plan.id}
                       onClick={() => handlePlanSelect(plan.id)}
                       className={`relative p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                        isSelected 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-gray-200 hover:border-gray-300'
+                        isSelected
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300"
                       }`}
                     >
                       {plan.popular && (
@@ -280,13 +313,17 @@ export default function RegisterPage() {
                           Popular
                         </Badge>
                       )}
-                      
+
                       <div className="text-center">
-                        <Icon className={`w-8 h-8 mx-auto mb-2 ${
-                          isSelected ? 'text-blue-600' : 'text-gray-400'
-                        }`} />
+                        <Icon
+                          className={`w-8 h-8 mx-auto mb-2 ${
+                            isSelected ? "text-blue-600" : "text-gray-400"
+                          }`}
+                        />
                         <h3 className="font-semibold text-sm">{plan.name}</h3>
-                        <p className="text-xs text-gray-600 mb-2">{plan.price}</p>
+                        <p className="text-xs text-gray-600 mb-2">
+                          {plan.price}
+                        </p>
                         <ul className="text-xs text-gray-500 space-y-1">
                           {plan.features.map((feature, index) => (
                             <li key={index} className="flex items-center">
@@ -296,7 +333,7 @@ export default function RegisterPage() {
                           ))}
                         </ul>
                       </div>
-                      
+
                       {isSelected && (
                         <div className="absolute top-2 right-2">
                           <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
@@ -322,7 +359,7 @@ export default function RegisterPage() {
                       type="text"
                       placeholder="John"
                       className="pl-10"
-                      {...register('firstName')}
+                      {...register("firstName")}
                     />
                   </div>
                   {errors.firstName && (
@@ -342,7 +379,7 @@ export default function RegisterPage() {
                       type="text"
                       placeholder="Doe"
                       className="pl-10"
-                      {...register('lastName')}
+                      {...register("lastName")}
                     />
                   </div>
                   {errors.lastName && (
@@ -364,7 +401,7 @@ export default function RegisterPage() {
                     type="email"
                     placeholder="john@company.com"
                     className="pl-10"
-                    {...register('email')}
+                    {...register("email")}
                   />
                 </div>
                 {errors.email && (
@@ -383,10 +420,10 @@ export default function RegisterPage() {
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
                       id="password"
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       placeholder="Min. 8 karakter"
                       className="pl-10 pr-10"
-                      {...register('password')}
+                      {...register("password")}
                     />
                     <button
                       type="button"
@@ -414,14 +451,16 @@ export default function RegisterPage() {
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
                       id="confirmPassword"
-                      type={showConfirmPassword ? 'text' : 'password'}
+                      type={showConfirmPassword ? "text" : "password"}
                       placeholder="Ulangi password"
                       className="pl-10 pr-10"
-                      {...register('confirmPassword')}
+                      {...register("confirmPassword")}
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
                     >
                       {showConfirmPassword ? (
@@ -451,14 +490,16 @@ export default function RegisterPage() {
                       type="text"
                       placeholder="Nama perusahaan"
                       className="pl-10"
-                      {...register('company')}
+                      {...register("company")}
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="jobTitle">Posisi/Jabatan</Label>
-                  <Select onValueChange={(value) => setValue('jobTitle', value)}>
+                  <Select
+                    onValueChange={(value) => setValue("jobTitle", value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih posisi" />
                     </SelectTrigger>
@@ -479,19 +520,30 @@ export default function RegisterPage() {
                   <Checkbox
                     id="agreeToTerms"
                     checked={watchedFields[0]}
-                    onCheckedChange={(checked) => setValue('agreeToTerms', !!checked)}
+                    onCheckedChange={(checked) =>
+                      setValue("agreeToTerms", !!checked)
+                    }
                     className="mt-1"
                   />
-                  <Label htmlFor="agreeToTerms" className="text-sm text-gray-600 leading-relaxed">
-                    Saya menyetujui{' '}
-                    <Link href="/terms" className="text-blue-600 hover:text-blue-800 underline">
+                  <Label
+                    htmlFor="agreeToTerms"
+                    className="text-sm text-gray-600 leading-relaxed"
+                  >
+                    Saya menyetujui{" "}
+                    <Link
+                      href="/terms"
+                      className="text-blue-600 hover:text-blue-800 underline"
+                    >
                       Syarat dan Ketentuan
-                    </Link>
-                    {' '}serta{' '}
-                    <Link href="/privacy" className="text-blue-600 hover:text-blue-800 underline">
+                    </Link>{" "}
+                    serta{" "}
+                    <Link
+                      href="/privacy"
+                      className="text-blue-600 hover:text-blue-800 underline"
+                    >
                       Kebijakan Privasi
-                    </Link>
-                    {' '}SpreadsheetAI *
+                    </Link>{" "}
+                    SpreadsheetAI *
                   </Label>
                 </div>
                 {errors.agreeToTerms && (
@@ -505,22 +557,23 @@ export default function RegisterPage() {
                   <Checkbox
                     id="subscribeNewsletter"
                     checked={watchedFields[1]}
-                    onCheckedChange={(checked) => setValue('subscribeNewsletter', !!checked)}
+                    onCheckedChange={(checked) =>
+                      setValue("subscribeNewsletter", !!checked)
+                    }
                     className="mt-1"
                   />
-                  <Label htmlFor="subscribeNewsletter" className="text-sm text-gray-600">
+                  <Label
+                    htmlFor="subscribeNewsletter"
+                    className="text-sm text-gray-600"
+                  >
                     Saya ingin menerima newsletter dan update produk terbaru
                   </Label>
                 </div>
               </div>
 
               {/* Submit Button */}
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Memproses...' : 'Buat Akun'}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Memproses..." : "Buat Akun"}
                 {!isLoading && <Zap className="ml-2 h-4 w-4" />}
               </Button>
             </form>
@@ -529,7 +582,9 @@ export default function RegisterPage() {
             <div className="relative my-6">
               <Separator />
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="bg-white px-2 text-sm text-gray-500">atau</span>
+                <span className="bg-white px-2 text-sm text-gray-500">
+                  atau
+                </span>
               </div>
             </div>
 
@@ -563,13 +618,13 @@ export default function RegisterPage() {
                   />
                 </svg>
               )}
-              {isGoogleLoading ? 'Memproses...' : 'Daftar dengan Google'}
+              {isGoogleLoading ? "Memproses..." : "Daftar dengan Google"}
             </Button>
 
             {/* Login Link */}
             <div className="text-center mt-6">
               <p className="text-sm text-gray-600">
-                Sudah punya akun?{' '}
+                Sudah punya akun?{" "}
                 <Link
                   href="/login"
                   className="text-blue-600 hover:text-blue-800 font-medium transition-colors"

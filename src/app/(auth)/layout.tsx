@@ -1,8 +1,9 @@
-import { Metadata } from 'next';
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Authentication - SpreadsheetAI',
-  description: 'Login atau daftar untuk mengakses SpreadsheetAI - Platform analisis spreadsheet dengan AI',
+  title: "Authentication - SpreadsheetAI",
+  description:
+    "Login atau daftar untuk mengakses SpreadsheetAI - Platform analisis spreadsheet dengan AI",
 };
 
 export default function AuthLayout({

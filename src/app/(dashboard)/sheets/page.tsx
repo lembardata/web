@@ -1,37 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import {
-  FileSpreadsheet,
-  Upload,
-  Download,
-  Eye,
-  Edit,
-  Trash2,
-  Search,
-  Plus,
   Calendar,
+  Download,
+  Edit,
+  Eye,
+  FileSpreadsheet,
   FileText,
+  Plus,
+  Search,
+  Trash2,
+  Upload,
 } from "lucide-react";
-import { useSpreadsheets } from "@/hooks/api";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,6 +24,25 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useSpreadsheets } from "@/hooks/api";
 
 // Mock data for spreadsheets
 const mockSpreadsheets = [
@@ -97,7 +97,7 @@ const formatFileSize = (bytes: number) => {
   const k = 1024;
   const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  return parseFloat((bytes / k ** i).toFixed(2)) + " " + sizes[i];
 };
 
 const formatDate = (dateString: string) => {
@@ -122,8 +122,8 @@ export default function SheetsPage() {
   // Filter spreadsheets based on search
   const filteredSpreadsheets = userSpreadsheets.filter(
     (sheet) =>
-      sheet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sheet.description?.toLowerCase().includes(searchTerm.toLowerCase()),
+      sheet?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sheet?.description?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleUpload = () => {

@@ -1,13 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Search,
   Filter,
@@ -29,25 +41,25 @@ import {
   Eye,
   Edit,
   Copy,
-} from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
-import { formatDistanceToNow } from 'date-fns';
-import { id } from 'date-fns/locale';
+} from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { formatDistanceToNow } from "date-fns";
+import { id } from "date-fns/locale";
 
-type ActivityType = 
-  | 'upload'
-  | 'query'
-  | 'download'
-  | 'share'
-  | 'delete'
-  | 'edit'
-  | 'view'
-  | 'login'
-  | 'logout'
-  | 'settings'
-  | 'billing';
+type ActivityType =
+  | "upload"
+  | "query"
+  | "download"
+  | "share"
+  | "delete"
+  | "edit"
+  | "view"
+  | "login"
+  | "logout"
+  | "settings"
+  | "billing";
 
-type ActivityStatus = 'success' | 'error' | 'pending' | 'warning';
+type ActivityStatus = "success" | "error" | "pending" | "warning";
 
 interface Activity {
   id: string;
@@ -71,95 +83,95 @@ interface Activity {
 // Mock data
 const mockActivities: Activity[] = [
   {
-    id: '1',
-    type: 'upload',
-    title: 'File Uploaded',
-    description: 'sales-data-2024.xlsx berhasil diupload',
-    status: 'success',
+    id: "1",
+    type: "upload",
+    title: "File Uploaded",
+    description: "sales-data-2024.xlsx berhasil diupload",
+    status: "success",
     timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
     metadata: {
-      fileName: 'sales-data-2024.xlsx',
+      fileName: "sales-data-2024.xlsx",
       fileSize: 2048576, // 2MB
     },
   },
   {
-    id: '2',
-    type: 'query',
-    title: 'AI Query Completed',
-    description: 'Analisis tren penjualan Q4 2024',
-    status: 'success',
+    id: "2",
+    type: "query",
+    title: "AI Query Completed",
+    description: "Analisis tren penjualan Q4 2024",
+    status: "success",
     timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
     metadata: {
-      queryModel: 'GPT-4',
+      queryModel: "GPT-4",
       duration: 45,
       cost: 0.05,
     },
   },
   {
-    id: '3',
-    type: 'query',
-    title: 'AI Query Failed',
-    description: 'Gagal menganalisis data customer segmentation',
-    status: 'error',
+    id: "3",
+    type: "query",
+    title: "AI Query Failed",
+    description: "Gagal menganalisis data customer segmentation",
+    status: "error",
     timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
     metadata: {
-      queryModel: 'Claude 3',
+      queryModel: "Claude 3",
       duration: 12,
     },
   },
   {
-    id: '4',
-    type: 'download',
-    title: 'File Downloaded',
-    description: 'report-summary.pdf berhasil didownload',
-    status: 'success',
+    id: "4",
+    type: "download",
+    title: "File Downloaded",
+    description: "report-summary.pdf berhasil didownload",
+    status: "success",
     timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
     metadata: {
-      fileName: 'report-summary.pdf',
+      fileName: "report-summary.pdf",
       fileSize: 1024000, // 1MB
     },
   },
   {
-    id: '5',
-    type: 'share',
-    title: 'File Shared',
-    description: 'budget-analysis.xlsx dibagikan ke tim',
-    status: 'success',
+    id: "5",
+    type: "share",
+    title: "File Shared",
+    description: "budget-analysis.xlsx dibagikan ke tim",
+    status: "success",
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
     metadata: {
-      fileName: 'budget-analysis.xlsx',
+      fileName: "budget-analysis.xlsx",
     },
   },
   {
-    id: '6',
-    type: 'login',
-    title: 'Login Successful',
-    description: 'Login dari Jakarta, Indonesia',
-    status: 'success',
+    id: "6",
+    type: "login",
+    title: "Login Successful",
+    description: "Login dari Jakarta, Indonesia",
+    status: "success",
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4), // 4 hours ago
     metadata: {
-      ipAddress: '103.xxx.xxx.xxx',
-      location: 'Jakarta, Indonesia',
-      userAgent: 'Chrome 120.0.0.0',
+      ipAddress: "103.xxx.xxx.xxx",
+      location: "Jakarta, Indonesia",
+      userAgent: "Chrome 120.0.0.0",
     },
   },
   {
-    id: '7',
-    type: 'settings',
-    title: 'Profile Updated',
-    description: 'Informasi profil berhasil diperbarui',
-    status: 'success',
+    id: "7",
+    type: "settings",
+    title: "Profile Updated",
+    description: "Informasi profil berhasil diperbarui",
+    status: "success",
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6), // 6 hours ago
   },
   {
-    id: '8',
-    type: 'delete',
-    title: 'File Deleted',
-    description: 'old-data.csv dihapus dari sistem',
-    status: 'warning',
+    id: "8",
+    type: "delete",
+    title: "File Deleted",
+    description: "old-data.csv dihapus dari sistem",
+    status: "warning",
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
     metadata: {
-      fileName: 'old-data.csv',
+      fileName: "old-data.csv",
     },
   },
 ];
@@ -183,13 +195,13 @@ const getActivityIcon = (type: ActivityType) => {
 
 const getStatusIcon = (status: ActivityStatus) => {
   switch (status) {
-    case 'success':
+    case "success":
       return CheckCircle;
-    case 'error':
+    case "error":
       return XCircle;
-    case 'pending':
+    case "pending":
       return RefreshCw;
-    case 'warning':
+    case "warning":
       return AlertCircle;
     default:
       return CheckCircle;
@@ -198,81 +210,89 @@ const getStatusIcon = (status: ActivityStatus) => {
 
 const getStatusColor = (status: ActivityStatus) => {
   switch (status) {
-    case 'success':
-      return 'text-green-600 bg-green-100';
-    case 'error':
-      return 'text-red-600 bg-red-100';
-    case 'pending':
-      return 'text-yellow-600 bg-yellow-100';
-    case 'warning':
-      return 'text-orange-600 bg-orange-100';
+    case "success":
+      return "text-green-600 bg-green-100";
+    case "error":
+      return "text-red-600 bg-red-100";
+    case "pending":
+      return "text-yellow-600 bg-yellow-100";
+    case "warning":
+      return "text-orange-600 bg-orange-100";
     default:
-      return 'text-gray-600 bg-gray-100';
+      return "text-gray-600 bg-gray-100";
   }
 };
 
 const formatFileSize = (bytes: number) => {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
 export default function ActivityPage() {
   const { user } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [selectedTimeRange, setSelectedTimeRange] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedTimeRange, setSelectedTimeRange] = useState<string>("all");
   const [activities] = useState<Activity[]>(mockActivities);
 
   // Filter activities
   const filteredActivities = activities.filter((activity) => {
-    const matchesSearch = activity.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         activity.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = selectedType === 'all' || activity.type === selectedType;
-    const matchesStatus = selectedStatus === 'all' || activity.status === selectedStatus;
-    
+    const matchesSearch =
+      activity.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      activity.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType =
+      selectedType === "all" || activity.type === selectedType;
+    const matchesStatus =
+      selectedStatus === "all" || activity.status === selectedStatus;
+
     let matchesTimeRange = true;
-    if (selectedTimeRange !== 'all') {
+    if (selectedTimeRange !== "all") {
       const now = new Date();
       const activityTime = activity.timestamp;
-      
+
       switch (selectedTimeRange) {
-        case 'today':
+        case "today":
           matchesTimeRange = activityTime.toDateString() === now.toDateString();
           break;
-        case 'week':
+        case "week":
           const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
           matchesTimeRange = activityTime >= weekAgo;
           break;
-        case 'month':
+        case "month":
           const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
           matchesTimeRange = activityTime >= monthAgo;
           break;
       }
     }
-    
+
     return matchesSearch && matchesType && matchesStatus && matchesTimeRange;
   });
 
   // Group activities by date
-  const groupedActivities = filteredActivities.reduce((groups, activity) => {
-    const date = activity.timestamp.toDateString();
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(activity);
-    return groups;
-  }, {} as Record<string, Activity[]>);
+  const groupedActivities = filteredActivities.reduce(
+    (groups, activity) => {
+      const date = activity.timestamp.toDateString();
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(activity);
+      return groups;
+    },
+    {} as Record<string, Activity[]>,
+  );
 
   // Activity statistics
   const stats = {
     total: activities.length,
-    today: activities.filter(a => a.timestamp.toDateString() === new Date().toDateString()).length,
-    success: activities.filter(a => a.status === 'success').length,
-    errors: activities.filter(a => a.status === 'error').length,
+    today: activities.filter(
+      (a) => a.timestamp.toDateString() === new Date().toDateString(),
+    ).length,
+    success: activities.filter((a) => a.status === "success").length,
+    errors: activities.filter((a) => a.status === "error").length,
   };
 
   return (
@@ -291,8 +311,12 @@ export default function ActivityPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Activities</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Total Activities
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.total}
+                </p>
               </div>
               <ActivityIcon className="h-8 w-8 text-blue-600" />
             </div>
@@ -304,7 +328,9 @@ export default function ActivityPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Today</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.today}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.today}
+                </p>
               </div>
               <Calendar className="h-8 w-8 text-green-600" />
             </div>
@@ -316,7 +342,9 @@ export default function ActivityPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Successful</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.success}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.success}
+                </p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
@@ -328,7 +356,9 @@ export default function ActivityPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Errors</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.errors}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.errors}
+                </p>
               </div>
               <XCircle className="h-8 w-8 text-red-600" />
             </div>
@@ -385,7 +415,10 @@ export default function ActivityPage() {
             </Select>
 
             {/* Time Range Filter */}
-            <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
+            <Select
+              value={selectedTimeRange}
+              onValueChange={setSelectedTimeRange}
+            >
               <SelectTrigger className="w-full lg:w-48">
                 <SelectValue placeholder="All Time" />
               </SelectTrigger>
@@ -406,11 +439,16 @@ export default function ActivityPage() {
           <Card>
             <CardContent className="p-12 text-center">
               <ActivityIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Activities Found</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No Activities Found
+              </h3>
               <p className="text-gray-500">
-                {searchQuery || selectedType !== 'all' || selectedStatus !== 'all' || selectedTimeRange !== 'all'
-                  ? 'Try adjusting your filters to see more activities.'
-                  : 'Your activity log will appear here as you use the platform.'}
+                {searchQuery ||
+                selectedType !== "all" ||
+                selectedStatus !== "all" ||
+                selectedTimeRange !== "all"
+                  ? "Try adjusting your filters to see more activities."
+                  : "Your activity log will appear here as you use the platform."}
               </p>
             </CardContent>
           </Card>
@@ -421,11 +459,11 @@ export default function ActivityPage() {
               <div key={date}>
                 <div className="flex items-center mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    {new Date(date).toLocaleDateString('id-ID', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
+                    {new Date(date).toLocaleDateString("id-ID", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
                     })}
                   </h3>
                   <div className="flex-1 h-px bg-gray-200 ml-4"></div>
@@ -433,12 +471,17 @@ export default function ActivityPage() {
 
                 <div className="space-y-3">
                   {dayActivities.map((activity) => {
-                    const ActivityIconComponent = getActivityIcon(activity.type);
+                    const ActivityIconComponent = getActivityIcon(
+                      activity.type,
+                    );
                     const StatusIconComponent = getStatusIcon(activity.status);
                     const statusColor = getStatusColor(activity.status);
 
                     return (
-                      <Card key={activity.id} className="hover:shadow-md transition-shadow">
+                      <Card
+                        key={activity.id}
+                        className="hover:shadow-md transition-shadow"
+                      >
                         <CardContent className="p-4">
                           <div className="flex items-start space-x-4">
                             {/* Activity Icon */}
@@ -455,12 +498,17 @@ export default function ActivityPage() {
                                   {activity.title}
                                 </h4>
                                 <div className="flex items-center space-x-2">
-                                  <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}>
+                                  <div
+                                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}
+                                  >
                                     <StatusIconComponent className="h-3 w-3 mr-1" />
                                     {activity.status}
                                   </div>
                                   <span className="text-xs text-gray-500">
-                                    {formatDistanceToNow(activity.timestamp, { addSuffix: true, locale: id })}
+                                    {formatDistanceToNow(activity.timestamp, {
+                                      addSuffix: true,
+                                      locale: id,
+                                    })}
                                   </span>
                                 </div>
                               </div>
@@ -480,7 +528,9 @@ export default function ActivityPage() {
                                   )}
                                   {activity.metadata.fileSize && (
                                     <Badge variant="outline">
-                                      {formatFileSize(activity.metadata.fileSize)}
+                                      {formatFileSize(
+                                        activity.metadata.fileSize,
+                                      )}
                                     </Badge>
                                   )}
                                   {activity.metadata.queryModel && (
