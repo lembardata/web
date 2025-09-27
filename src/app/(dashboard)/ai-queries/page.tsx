@@ -1,6 +1,33 @@
 "use client";
 
+import {
+  AlertCircle,
+  BarChart3,
+  Brain,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Copy,
+  Database,
+  Download,
+  Eye,
+  FileSpreadsheet,
+  FileText,
+  Filter,
+  Play,
+  RefreshCw,
+  Search,
+  Target,
+  Trash2,
+  TrendingUp,
+  Upload,
+  XCircle,
+  Zap,
+} from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,43 +35,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
-import {
-  Brain,
-  Upload,
-  FileSpreadsheet,
-  Download,
-  Eye,
-  Trash2,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  RefreshCw,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Play,
-  Copy,
-  Share,
-  Star,
-  Calendar,
-  BarChart3,
-  TrendingUp,
-  FileText,
-  Zap,
-  Target,
-  Database,
-} from "lucide-react";
-import { toast } from "sonner";
-import { useAuth } from "@/hooks/use-auth";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 interface QueryResult {
   id: string;
@@ -74,7 +69,6 @@ interface FileUpload {
 }
 
 export default function AIQueriesPage() {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("new-query");
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -297,7 +291,7 @@ export default function AIQueriesPage() {
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    return parseFloat((bytes / k ** i).toFixed(2)) + " " + sizes[i];
   };
 
   const formatDate = (dateString: string) => {
@@ -335,7 +329,7 @@ export default function AIQueriesPage() {
   );
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="container mx-auto  space-y-8">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Brain className="h-8 w-8 text-primary" />

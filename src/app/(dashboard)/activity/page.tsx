@@ -1,16 +1,35 @@
 "use client";
 
+import { formatDistanceToNow } from "date-fns";
+import { id } from "date-fns/locale";
+import {
+  Activity as ActivityIcon,
+  AlertCircle,
+  Brain,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Download,
+  Edit,
+  Eye,
+  FileSpreadsheet,
+  RefreshCw,
+  Search,
+  Settings,
+  Share2,
+  Trash2,
+  Upload,
+  User,
+  XCircle,
+} from "lucide-react";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -18,33 +37,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Search,
-  Filter,
-  Download,
-  Upload,
-  Brain,
-  FileSpreadsheet,
-  Trash2,
-  Share2,
-  Settings,
-  User,
-  Clock,
-  Calendar,
-  Activity as ActivityIcon,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  RefreshCw,
-  Eye,
-  Edit,
-  Copy,
-} from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import { formatDistanceToNow } from "date-fns";
-import { id } from "date-fns/locale";
 
 type ActivityType =
   | "upload"
@@ -228,11 +220,10 @@ const formatFileSize = (bytes: number) => {
   const k = 1024;
   const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  return parseFloat((bytes / k ** i).toFixed(2)) + " " + sizes[i];
 };
 
 export default function ActivityPage() {
-  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
@@ -258,14 +249,16 @@ export default function ActivityPage() {
         case "today":
           matchesTimeRange = activityTime.toDateString() === now.toDateString();
           break;
-        case "week":
+        case "week": {
           const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
           matchesTimeRange = activityTime >= weekAgo;
           break;
-        case "month":
+        }
+        case "month": {
           const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
           matchesTimeRange = activityTime >= monthAgo;
           break;
+        }
       }
     }
 
@@ -296,7 +289,7 @@ export default function ActivityPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="container mx-auto">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Activity Log</h1>
