@@ -1,16 +1,16 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api";
 import { toast } from "sonner";
+import { apiClient } from "@/lib/api";
 import type {
   CreateSpreadsheetRequest,
   CreateSpreadsheetResponse,
   ReadSpreadsheetRequest,
   ReadSpreadsheetResponse,
+  Spreadsheet,
   WriteSpreadsheetRequest,
   WriteSpreadsheetResponse,
-  Spreadsheet,
 } from "@/types/api";
 
 // Hook untuk membuat spreadsheet baru
@@ -22,7 +22,7 @@ export function useCreateSpreadsheet() {
       data: CreateSpreadsheetRequest,
     ): Promise<CreateSpreadsheetResponse> => {
       const response = await apiClient.post<CreateSpreadsheetResponse>(
-        "/api/v1/sheets",
+        "/sheets",
         data,
       );
       return response.data;
@@ -45,7 +45,7 @@ export function useSpreadsheets() {
   return useQuery({
     queryKey: ["spreadsheets"],
     queryFn: async (): Promise<Spreadsheet[]> => {
-      const response = await apiClient.get<Spreadsheet[]>("/api/v1/sheets");
+      const response = await apiClient.get<Spreadsheet[]>("/sheets");
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -59,7 +59,7 @@ export function useReadSpreadsheet(spreadsheetId: string) {
       data: ReadSpreadsheetRequest,
     ): Promise<ReadSpreadsheetResponse> => {
       const response = await apiClient.post<ReadSpreadsheetResponse>(
-        `/api/v1/sheets/${spreadsheetId}/read`,
+        `/sheets/${spreadsheetId}/read`,
         data,
       );
       return response.data;
@@ -79,7 +79,7 @@ export function useWriteSpreadsheet(spreadsheetId: string) {
       data: WriteSpreadsheetRequest,
     ): Promise<WriteSpreadsheetResponse> => {
       const response = await apiClient.post<WriteSpreadsheetResponse>(
-        `/api/v1/sheets/${spreadsheetId}/write`,
+        `/sheets/${spreadsheetId}/write`,
         data,
       );
       return response.data;
@@ -102,7 +102,7 @@ export function useSpreadsheet(id: string) {
   return useQuery({
     queryKey: ["spreadsheet", id],
     queryFn: async (): Promise<Spreadsheet> => {
-      const response = await apiClient.get<Spreadsheet>(`/api/v1/sheets/${id}`);
+      const response = await apiClient.get<Spreadsheet>(`/sheets/${id}`);
       return response.data;
     },
     enabled: !!id,

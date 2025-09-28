@@ -1,19 +1,29 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Progress } from "@/components/ui/progress";
+  AlertCircle,
+  Calendar,
+  CheckCircle,
+  Download,
+  Eye,
+  FileSpreadsheet,
+  FileText,
+  HardDrive,
+  RefreshCw,
+  Search,
+  Share,
+  Star,
+  Trash2,
+  Upload,
+  Users,
+  Zap,
+} from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { useDropzone } from "react-dropzone";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -22,28 +32,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  FileSpreadsheet,
-  Upload,
-  Search,
-  Download,
-  Eye,
-  Trash2,
-  Share,
-  Star,
-  FileText,
-  Zap,
-  RefreshCw,
-  AlertCircle,
-  CheckCircle,
-  Calendar,
-  HardDrive,
-  Users,
-} from "lucide-react";
-import { toast } from "sonner";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useCreateSpreadsheet, useSpreadsheets } from "@/hooks/api/use-sheets";
 import { useAuth } from "@/hooks/use-auth";
-import { useDropzone } from "react-dropzone";
-import { useSpreadsheets } from "@/hooks/api/use-sheets";
 
 // Mock spreadsheets data
 const mockSpreadsheets = [
@@ -62,126 +62,84 @@ const mockSpreadsheets = [
     owner: "John Doe",
     shared: false,
     favorite: true,
-    tags: ["sales", "q4", "2023"],
-    queries: 5,
-    lastQuery: "2024-01-15T11:30:00Z",
+    tags: ["sales", "2023", "Q4"],
+    queries: 12,
     preview: {
-      headers: ["Date", "Product", "Category", "Sales", "Quantity", "Revenue"],
+      headers: ["Date", "Product", "Revenue", "Region"],
       rows: [
-        ["2023-10-01", "Product A", "Electronics", "$1,250", "5", "$6,250"],
-        ["2023-10-01", "Product B", "Clothing", "$850", "12", "$10,200"],
-        ["2023-10-02", "Product C", "Electronics", "$2,100", "3", "$6,300"],
-      ],
-    },
-  },
-  {
-    id: "sheet-002",
-    name: "customer-data.csv",
-    originalName: "Customer Database Export.csv",
-    size: 1234567,
-    type: "text/csv",
-    uploaded: "2024-01-14T16:20:00Z",
-    lastModified: "2024-01-14T16:20:00Z",
-    status: "processing",
-    progress: 75,
-    rows: 8950,
-    columns: 8,
-    sheets: 1,
-    owner: "Jane Smith",
-    shared: true,
-    favorite: false,
-    tags: ["customers", "database"],
-    queries: 2,
-    lastQuery: "2024-01-14T17:00:00Z",
-  },
-  {
-    id: "sheet-003",
-    name: "inventory-data.xlsx",
-    originalName: "Inventory Management.xlsx",
-    size: 987654,
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    uploaded: "2024-01-13T09:15:00Z",
-    lastModified: "2024-01-13T09:15:00Z",
-    status: "error",
-    error: "Invalid file format. Please check the file structure.",
-    rows: 0,
-    columns: 0,
-    sheets: 0,
-    owner: "Mike Johnson",
-    shared: false,
-    favorite: false,
-    tags: ["inventory"],
-    queries: 0,
-  },
-  {
-    id: "sheet-004",
-    name: "financial-data.xlsx",
-    originalName: "Financial Report 2023.xlsx",
-    size: 3456789,
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    uploaded: "2024-01-12T14:45:00Z",
-    lastModified: "2024-01-12T14:45:00Z",
-    status: "processed",
-    rows: 25600,
-    columns: 15,
-    sheets: 5,
-    owner: "Sarah Wilson",
-    shared: true,
-    favorite: true,
-    tags: ["finance", "report", "2023"],
-    queries: 8,
-    lastQuery: "2024-01-15T09:20:00Z",
-    preview: {
-      headers: ["Month", "Revenue", "Expenses", "Profit", "Growth %"],
-      rows: [
-        ["Jan 2023", "$125,000", "$85,000", "$40,000", "12.5%"],
-        ["Feb 2023", "$135,000", "$88,000", "$47,000", "17.5%"],
-        ["Mar 2023", "$142,000", "$92,000", "$50,000", "6.4%"],
+        ["2023-10-01", "Product A", "$12,345", "North"],
+        ["2023-10-02", "Product B", "$9,876", "South"],
+        ["2023-10-03", "Product C", "$15,432", "East"],
+        ["2023-10-04", "Product D", "$7,654", "West"],
       ],
     },
   },
 ];
 
-const fileTypes = [
-  { value: "all", label: "All Files" },
-  { value: "xlsx", label: "Excel (.xlsx)" },
-  { value: "csv", label: "CSV (.csv)" },
-  { value: "xls", label: "Excel Legacy (.xls)" },
-];
-
-const statusTypes = [
-  { value: "all", label: "All Status" },
-  { value: "processed", label: "Processed" },
-  { value: "processing", label: "Processing" },
-  { value: "error", label: "Error" },
-  { value: "uploading", label: "Uploading" },
-];
+// Hapus deklarasi yang tidak dipakai untuk mengatasi linter error
+// const fileTypes = [
+//   { value: "all", label: "All Types" },
+//   { value: "xlsx", label: "Excel (.xlsx)" },
+//   { value: "xls", label: "Excel (.xls)" },
+//   { value: "csv", label: "CSV" },
+// ];
+// const statusTypes = [
+//   { value: "all", label: "All Status" },
+//   { value: "processed", label: "Processed" },
+//   { value: "processing", label: "Processing" },
+//   { value: "error", label: "Error" },
+// ];
 
 export default function SpreadsheetsPage() {
   const { user } = useAuth();
-  const { spreadsheets, isLoading, uploadSpreadsheet, deleteSpreadsheet } =
-    useSpreadsheets();
+  const { data: spreadsheets, isLoading, refetch } = useSpreadsheets();
+  const { mutateAsync: createSpreadsheet, isPending: isCreating } =
+    useCreateSpreadsheet();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("uploaded");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  // const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedSpreadsheet, setSelectedSpreadsheet] = useState<any>(null);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
 
-  // Use mock data if spreadsheets from hook is empty
+  // Map data API Spreadsheet -> bentuk UI kartu agar filter/sort tetap berfungsi
+  const mappedSheets = useMemo(() => {
+    if (!spreadsheets || spreadsheets.length === 0) return [] as any[];
+    return spreadsheets.map((s) => ({
+      id: s.id,
+      name: s.title,
+      originalName: s.title,
+      size: 0,
+      type: "google/sheets",
+      uploaded: s.created_at,
+      lastModified: s.created_at,
+      status: "processed",
+      rows: 0,
+      columns: 0,
+      sheets: 0,
+      owner: user?.name ?? "",
+      shared: false,
+      favorite: false,
+      tags: [],
+      queries: 0,
+      preview: null,
+    }));
+  }, [spreadsheets, user?.name]);
+
+  // Use mock data jika belum ada data dari API
   const displaySpreadsheets =
-    spreadsheets?.length > 0 ? spreadsheets : mockSpreadsheets;
+    mappedSheets.length > 0 ? mappedSheets : mockSpreadsheets;
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       const file = acceptedFiles[0];
       if (!file) return;
 
-      // Validate file type
+      // Validasi tipe file
       const allowedTypes = [
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "application/vnd.ms-excel",
@@ -189,15 +147,13 @@ export default function SpreadsheetsPage() {
       ];
 
       if (!allowedTypes.includes(file.type)) {
-        toast.error(
-          "File type not supported. Please upload Excel or CSV files.",
-        );
+        toast.error("Tipe file tidak didukung. Unggah file Excel atau CSV.");
         return;
       }
 
-      // Validate file size (max 10MB)
+      // Validasi ukuran file (maks 10MB)
       if (file.size > 10 * 1024 * 1024) {
-        toast.error("File size too large. Maximum size is 10MB.");
+        toast.error("Ukuran file terlalu besar. Maksimal 10MB.");
         return;
       }
 
@@ -205,7 +161,7 @@ export default function SpreadsheetsPage() {
       setUploadProgress(0);
 
       try {
-        // Simulate upload progress
+        // Simulasi progress upload (UI saja)
         const interval = setInterval(() => {
           setUploadProgress((prev) => {
             if (prev >= 90) {
@@ -216,19 +172,24 @@ export default function SpreadsheetsPage() {
           });
         }, 200);
 
-        await uploadSpreadsheet(file);
+        // API: Tidak ada endpoint upload file di Postman; gunakan Create Sheet.
+        await createSpreadsheet({ title: file.name });
 
         setUploadProgress(100);
-        toast.success("Spreadsheet uploaded successfully!");
+        toast.success("Spreadsheet berhasil didaftarkan!");
         setShowUploadDialog(false);
-      } catch (error) {
-        toast.error("Failed to upload spreadsheet. Please try again.");
+        await refetch();
+      } catch (error: any) {
+        toast.error(
+          error?.response?.data?.error ||
+            "Gagal mendaftarkan spreadsheet. Silakan coba lagi.",
+        );
       } finally {
         setIsUploading(false);
         setUploadProgress(0);
       }
     },
-    [uploadSpreadsheet],
+    [createSpreadsheet, refetch],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -244,12 +205,8 @@ export default function SpreadsheetsPage() {
   });
 
   const handleDeleteSpreadsheet = async (spreadsheetId: string) => {
-    try {
-      await deleteSpreadsheet(spreadsheetId);
-      toast.success("Spreadsheet deleted successfully!");
-    } catch (error) {
-      toast.error("Failed to delete spreadsheet.");
-    }
+    // Tidak ada endpoint delete sheet pada Postman Collection saat ini
+    toast.info("Hapus spreadsheet belum didukung oleh API.");
   };
 
   const getStatusIcon = (status: string) => {
@@ -270,26 +227,16 @@ export default function SpreadsheetsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "processed":
-        return "bg-green-100 text-green-800";
+        return "bg-green-50 text-green-700 border-green-200";
       case "processing":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-50 text-blue-700 border-blue-200";
       case "error":
-        return "bg-red-100 text-red-800";
+        return "bg-red-50 text-red-700 border-red-200";
       case "uploading":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-50 text-yellow-700 border-yellow-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-50 text-gray-700 border-gray-200";
     }
-  };
-
-  const getFileIcon = (type: string) => {
-    if (type.includes("spreadsheet") || type.includes("excel")) {
-      return <FileSpreadsheet className="h-8 w-8 text-green-600" />;
-    }
-    if (type.includes("csv")) {
-      return <FileText className="h-8 w-8 text-blue-600" />;
-    }
-    return <FileSpreadsheet className="h-8 w-8 text-gray-600" />;
   };
 
   const formatFileSize = (bytes: number) => {
@@ -297,7 +244,7 @@ export default function SpreadsheetsPage() {
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    return parseFloat((bytes / k ** i).toFixed(2)) + " " + sizes[i];
   };
 
   const filteredSpreadsheets = displaySpreadsheets.filter((sheet) => {
@@ -312,7 +259,8 @@ export default function SpreadsheetsPage() {
       typeFilter === "all" ||
       (typeFilter === "xlsx" && sheet.type.includes("spreadsheet")) ||
       (typeFilter === "csv" && sheet.type.includes("csv")) ||
-      (typeFilter === "xls" && sheet.type.includes("excel"));
+      (typeFilter === "xls" && sheet.type.includes("excel")) ||
+      (typeFilter === "google" && sheet.type.includes("google"));
 
     const matchesStatus =
       statusFilter === "all" || sheet.status === statusFilter;
@@ -341,7 +289,7 @@ export default function SpreadsheetsPage() {
       .length,
     processing: displaySpreadsheets.filter((s) => s.status === "processing")
       .length,
-    totalSize: displaySpreadsheets.reduce((acc, s) => acc + s.size, 0),
+    totalSize: displaySpreadsheets.reduce((acc, s) => acc + (s.size || 0), 0),
   };
 
   return (
@@ -356,23 +304,28 @@ export default function SpreadsheetsPage() {
         </div>
 
         <div className="mt-4 sm:mt-0 flex space-x-3">
-          <Button variant="outline">
+          <Button
+            variant="outline"
+            onClick={() => refetch()}
+            disabled={isLoading}
+          >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
 
           <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
             <DialogTrigger asChild>
-              <Button>
+              <Button disabled={isCreating}>
                 <Upload className="h-4 w-4 mr-2" />
                 Upload
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Upload Spreadsheet</DialogTitle>
+                <DialogTitle>Daftarkan Spreadsheet</DialogTitle>
                 <DialogDescription>
-                  Upload file Excel atau CSV untuk dianalisis dengan AI
+                  Unggah file Excel/CSV untuk mengambil judul, lalu sistem akan
+                  mendaftarkan spreadsheet Anda.
                 </DialogDescription>
               </DialogHeader>
 
@@ -388,23 +341,24 @@ export default function SpreadsheetsPage() {
                   <input {...getInputProps()} />
                   <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   {isDragActive ? (
-                    <p className="text-blue-600">Drop the file here...</p>
+                    <p className="text-blue-600">Lepaskan file di sini...</p>
                   ) : (
                     <div>
                       <p className="text-gray-600 mb-2">
-                        Drag & drop a spreadsheet here, or click to select
+                        Seret & taruh spreadsheet di sini, atau klik untuk
+                        memilih
                       </p>
                       <p className="text-sm text-gray-500">
-                        Supports: .xlsx, .xls, .csv (max 10MB)
+                        Mendukung: .xlsx, .xls, .csv (maks 10MB)
                       </p>
                     </div>
                   )}
                 </div>
 
-                {isUploading && (
+                {(isUploading || isCreating) && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span>Uploading...</span>
+                      <span>Mendaftarkan...</span>
                       <span>{uploadProgress}%</span>
                     </div>
                     <Progress value={uploadProgress} className="h-2" />
@@ -469,200 +423,203 @@ export default function SpreadsheetsPage() {
         </Card>
       </div>
 
-      {/* Filters and Controls */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search spreadsheets..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="relative">
+          <Input
+            placeholder="Cari spreadsheet..."
+            className="pl-10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {fileTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger>
+            <SelectValue placeholder="Tipe" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Tipe</SelectItem>
+            <SelectItem value="xlsx">Excel (.xlsx)</SelectItem>
+            <SelectItem value="xls">Excel (.xls)</SelectItem>
+            <SelectItem value="csv">CSV</SelectItem>
+            <SelectItem value="google">Google Sheets</SelectItem>
+          </SelectContent>
+        </Select>
 
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusTypes.map((status) => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger>
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Status</SelectItem>
+            <SelectItem value="processed">Processed</SelectItem>
+            <SelectItem value="processing">Processing</SelectItem>
+            <SelectItem value="error">Error</SelectItem>
+          </SelectContent>
+        </Select>
 
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="uploaded">Latest</SelectItem>
-                  <SelectItem value="name">Name</SelectItem>
-                  <SelectItem value="size">Size</SelectItem>
-                  <SelectItem value="queries">Queries</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger>
+            <SelectValue placeholder="Urutkan" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="uploaded">Tanggal Upload</SelectItem>
+            <SelectItem value="name">Nama</SelectItem>
+            <SelectItem value="size">Ukuran</SelectItem>
+            <SelectItem value="queries">Jumlah Query</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-      {/* Spreadsheets Grid */}
+      {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sortedSpreadsheets.map((sheet) => (
-          <Card key={sheet.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  {getFileIcon(sheet.type)}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold truncate">
-                      {sheet.originalName}
-                    </h3>
-                    <p className="text-sm text-gray-500 truncate">
-                      {sheet.name}
-                    </p>
+          <Card key={sheet.id} className="overflow-hidden">
+            <CardContent className="p-0">
+              <div className="p-4 space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 rounded-lg bg-blue-50">
+                      <FileSpreadsheet className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {sheet.originalName}
+                      </h3>
+                      <p className="text-sm text-gray-500">{sheet.name}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button variant="ghost" size="icon">
+                      <Star
+                        className={`h-4 w-4 ${sheet.favorite ? "text-yellow-500" : "text-gray-400"}`}
+                      />
+                    </Button>
+                    <Button variant="ghost" size="icon">
+                      <FileText className="h-4 w-4 text-gray-400" />
+                    </Button>
+                    {sheet.shared && (
+                      <Users className="h-4 w-4 text-blue-500" />
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  {sheet.favorite && (
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                  )}
-                  {sheet.shared && <Users className="h-4 w-4 text-blue-500" />}
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Badge className={getStatusColor(sheet.status)}>
-                    <div className="flex items-center space-x-1">
-                      {getStatusIcon(sheet.status)}
-                      <span>{sheet.status}</span>
-                    </div>
-                  </Badge>
-                  <span className="text-sm text-gray-500">
-                    {formatFileSize(sheet.size)}
-                  </span>
-                </div>
-
-                {sheet.status === "processing" && sheet.progress && (
-                  <div>
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span>Processing</span>
-                      <span>{sheet.progress}%</span>
-                    </div>
-                    <Progress value={sheet.progress} className="h-2" />
-                  </div>
-                )}
-
-                {sheet.status === "error" && sheet.error && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <div className="flex items-center space-x-2">
-                      <AlertCircle className="h-4 w-4 text-red-600" />
-                      <span className="text-sm text-red-800">
-                        {sheet.error}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {sheet.status === "processed" && (
-                  <div className="grid grid-cols-3 gap-2 text-sm">
-                    <div className="text-center">
-                      <p className="font-medium">
-                        {sheet.rows.toLocaleString()}
-                      </p>
-                      <p className="text-gray-500">Rows</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="font-medium">{sheet.columns}</p>
-                      <p className="text-gray-500">Columns</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="font-medium">{sheet.sheets}</p>
-                      <p className="text-gray-500">Sheets</p>
-                    </div>
-                  </div>
-                )}
-
-                {sheet.tags && sheet.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {sheet.tags.map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between text-sm text-gray-500">
-                  <div className="flex items-center space-x-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>
-                      {new Date(sheet.uploaded).toLocaleDateString("id-ID")}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Badge className={getStatusColor(sheet.status)}>
+                      <div className="flex items-center space-x-1">
+                        {getStatusIcon(sheet.status)}
+                        <span>{sheet.status}</span>
+                      </div>
+                    </Badge>
+                    <span className="text-sm text-gray-500">
+                      {formatFileSize(sheet.size || 0)}
                     </span>
                   </div>
 
-                  {sheet.queries > 0 && (
-                    <div className="flex items-center space-x-1">
-                      <Zap className="h-4 w-4" />
-                      <span>{sheet.queries} queries</span>
+                  {sheet.status === "processing" && sheet.progress && (
+                    <div>
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <span>Processing</span>
+                        <span>{sheet.progress}%</span>
+                      </div>
+                      <Progress value={sheet.progress} className="h-2" />
                     </div>
                   )}
-                </div>
 
-                <div className="flex items-center justify-between pt-3 border-t">
-                  <div className="flex space-x-2">
-                    {sheet.status === "processed" && (
-                      <>
-                        <Button
+                  {sheet.status === "error" && sheet.error && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <div className="flex items-center space-x-2">
+                        <AlertCircle className="h-4 w-4 text-red-600" />
+                        <span className="text-sm text-red-800">
+                          {sheet.error}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {sheet.status === "processed" && (
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div className="text-center">
+                        <p className="font-medium">
+                          {(sheet.rows || 0).toLocaleString()}
+                        </p>
+                        <p className="text-gray-500">Rows</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="font-medium">{sheet.columns || 0}</p>
+                        <p className="text-gray-500">Columns</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="font-medium">{sheet.sheets || 0}</p>
+                        <p className="text-gray-500">Sheets</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {sheet.tags && sheet.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {sheet.tags.map((tag: string) => (
+                        <Badge
+                          key={`${sheet.id}-${tag}`}
                           variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedSpreadsheet(sheet)}
+                          className="text-xs"
                         >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
 
-                        <Button variant="outline" size="sm">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </>
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <div className="flex items-center space-x-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        {new Date(sheet.uploaded).toLocaleDateString("id-ID")}
+                      </span>
+                    </div>
+
+                    {sheet.queries > 0 && (
+                      <div className="flex items-center space-x-1">
+                        <Zap className="h-4 w-4" />
+                        <span>{sheet.queries} queries</span>
+                      </div>
                     )}
-
-                    <Button variant="outline" size="sm">
-                      <Share className="h-4 w-4" />
-                    </Button>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteSpreadsheet(sheet.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center justify-between pt-3 border-t">
+                    <div className="flex space-x-2">
+                      {sheet.status === "processed" && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedSpreadsheet(sheet)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+
+                          <Button variant="outline" size="sm">
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+
+                      <Button variant="outline" size="sm">
+                        <Share className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteSpreadsheet(sheet.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -677,17 +634,17 @@ export default function SpreadsheetsPage() {
             <FileSpreadsheet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               {searchQuery || typeFilter !== "all" || statusFilter !== "all"
-                ? "No spreadsheets found"
-                : "No spreadsheets yet"}
+                ? "Tidak ada spreadsheet ditemukan"
+                : "Belum ada spreadsheet"}
             </h3>
             <p className="text-gray-600 mb-4">
               {searchQuery || typeFilter !== "all" || statusFilter !== "all"
-                ? "Try adjusting your filters or search terms"
-                : "Upload your first spreadsheet to get started"}
+                ? "Coba ubah filter atau kata kunci pencarian"
+                : "Daftarkan spreadsheet untuk memulai"}
             </p>
             <Button onClick={() => setShowUploadDialog(true)}>
               <Upload className="h-4 w-4 mr-2" />
-              Upload Spreadsheet
+              Daftarkan Spreadsheet
             </Button>
           </CardContent>
         </Card>
@@ -726,7 +683,7 @@ export default function SpreadsheetsPage() {
                 <div>
                   <p className="font-medium">Size</p>
                   <p className="text-gray-600">
-                    {formatFileSize(selectedSpreadsheet.size)}
+                    {formatFileSize(selectedSpreadsheet.size || 0)}
                   </p>
                 </div>
               </div>
@@ -741,9 +698,9 @@ export default function SpreadsheetsPage() {
                       <thead>
                         <tr className="border-b bg-gray-50">
                           {selectedSpreadsheet.preview.headers.map(
-                            (header: string, index: number) => (
+                            (header: string) => (
                               <th
-                                key={index}
+                                key={`${selectedSpreadsheet.id}-h-${header}`}
                                 className="text-left p-3 font-medium"
                               >
                                 {header}
@@ -754,13 +711,16 @@ export default function SpreadsheetsPage() {
                       </thead>
                       <tbody>
                         {selectedSpreadsheet.preview.rows.map(
-                          (row: string[], index: number) => (
+                          (row: string[], rIndex: number) => (
                             <tr
-                              key={index}
+                              key={`${selectedSpreadsheet.id}-r-${rIndex}`}
                               className="border-b hover:bg-gray-50"
                             >
-                              {row.map((cell: string, cellIndex: number) => (
-                                <td key={cellIndex} className="p-3">
+                              {row.map((cell: string, cIndex: number) => (
+                                <td
+                                  key={`${selectedSpreadsheet.id}-c-${rIndex}-${cIndex}`}
+                                  className="p-3"
+                                >
                                   {cell}
                                 </td>
                               ))}
@@ -778,11 +738,11 @@ export default function SpreadsheetsPage() {
                   variant="outline"
                   onClick={() => setSelectedSpreadsheet(null)}
                 >
-                  Close
+                  Tutup
                 </Button>
                 <Button>
                   <Zap className="h-4 w-4 mr-2" />
-                  Create AI Query
+                  Buat AI Query
                 </Button>
               </div>
             </div>
